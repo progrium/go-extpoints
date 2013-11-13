@@ -1,5 +1,5 @@
 
-implements("OutoutRenderer")
+implements("OutputRenderer")
 
 function Match(pattern) {
 	if (["wes", "jason", "bill"].indexOf(pattern) > -1) {

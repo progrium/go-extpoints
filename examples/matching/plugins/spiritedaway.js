@@ -1,5 +1,5 @@
 
-implements("OutoutRenderer")
+implements("OutputRenderer")
 
 function Match(pattern) {
 	if (pattern == "miyazaki" || pattern == "ghibli") {

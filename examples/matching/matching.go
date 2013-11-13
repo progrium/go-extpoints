@@ -7,18 +7,18 @@ import (
 	"github.com/progrium/go-plugins"
 )
 
-type OutoutRenderer struct {
+type OutputRenderer struct {
 	Match func(string) bool
 	Output func() string
 }
-var OutoutRendererExt struct {
-	Plugin func(string) OutoutRenderer
-	Plugins func() []OutoutRenderer
+var OutputRendererExt struct {
+	Plugin func(string) OutputRenderer
+	Plugins func() []OutputRenderer
 }
 
 func main() {
 	plugins.LoadFromPath()
-	plugins.Register(&OutoutRendererExt)
+	plugins.Register(&OutputRendererExt)
 
 	flag.Parse()
 
@@ -27,7 +27,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, renderer := range OutoutRendererExt.Plugins() {
+	for _, renderer := range OutputRendererExt.Plugins() {
 		if renderer.Match(flag.Arg(0)) {
 			fmt.Println(renderer.Output())
 			return
