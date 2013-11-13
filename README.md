@@ -1,4 +1,4 @@
-# go-plugins (experimental, but already badass)
+# go-plugins (experimental)
 
 Let users extend your Go applications with JavaScript and eventually Lua.
 
