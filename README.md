@@ -8,7 +8,7 @@ Thanks to [Otto](https://github.com/robertkrimen/otto), [Go reflection](http://g
 
 ## Using plugins
 
-First, you define an "extension point". This is just an interface that plugins can implement and more or less a factory thing. Here is a simple observer pattern:
+First, you define an "extension point". This is just an interface that plugins can implement and more or less a factory thing. Here is a simple observer pattern extension point:
 
 	type ProgramObserver struct {
 		ProgramStarted func()
@@ -36,6 +36,10 @@ Now use the extension point in your program:
 		observer.ProgramEnded()
 	}
 
+When we run the output is pretty boring:
+
+	Hello World
+
 Now let's write a plugin. We'll call it `happy.js`:
 
 	implements("ProgramObserver")
@@ -48,7 +52,7 @@ Now let's write a plugin. We'll call it `happy.js`:
 		console.log("Yay! It's over!")
 	}
 
-When we run our program? 
+Now when we run our program? 
 
 	Yay! It's starting!
 	Hello World
