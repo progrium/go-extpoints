@@ -4,6 +4,8 @@
 
 Let users extend your Go applications with JavaScript and eventually Lua.
 
+Thanks to [Otto](https://github.com/robertkrimen/otto), [Go reflection](http://golang.org/pkg/reflect/), and inspired by [Trac component architecture](http://trac.edgewall.org/wiki/TracDev/ComponentArchitecture).
+
 ## Using plugins
 
 First, you define an "extension point". This is just an interface that plugins can implement and more or less a factory thing. Here is a simple observer pattern:
