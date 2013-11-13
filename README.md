@@ -2,13 +2,13 @@
 
 *early and experimental, but already badass*
 
-Let users extend your Go applications with JavaScript and eventually Lua.
+Let users extend your Go applications with JavaScript and eventually Lua (or anything).
 
 Thanks to [Otto](https://github.com/robertkrimen/otto), [Go reflection](http://golang.org/pkg/reflect/), and inspired by [Trac component architecture](http://trac.edgewall.org/wiki/TracDev/ComponentArchitecture).
 
 ## Using plugins
 
-First, you define an "extension point". This is just an interface that plugins can implement and more or less a factory thing. Here is a simple observer pattern extension point:
+First, you define an "extension point". This involves writing an interface that plugins can implement, and then an extension point stub. Here is a simple observer pattern extension point:
 
 	type ProgramObserver struct {
 		ProgramStarted func()
@@ -24,7 +24,7 @@ Now in the main() of your program, you load any plugins and register the extensi
 	plugins.LoadFromPath()
 	plugins.Register(&ProgramObserverExt)
 
-Now use the extension point in your program:
+Now use the extension point in your program. `.Plugins()` gets you all plugins implementing that extension point interface, whereas `.Plugin(name)` lets you get a specific plugin by name.:
 
 	for _, observer := range ProgramObserverExt.Plugins() {
 		observer.ProgramStarted()
@@ -52,7 +52,7 @@ Now let's write a plugin. We'll call it `happy.js`:
 		console.log("Yay! It's over!")
 	}
 
-Now when we run our program? 
+A plugin can implement any number of extension point interfaces. Now when we run our program? 
 
 	Yay! It's starting!
 	Hello World
