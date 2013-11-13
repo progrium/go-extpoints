@@ -1,0 +1,31 @@
+package main
+
+import (
+	"fmt"
+	"github.com/progrium/go-plugins"
+)
+
+type ProgramObserver struct {
+	ProgramStarted func()
+	ProgramEnded func()
+}
+var ProgramObserverExt struct {
+	Plugin func(string) ProgramObserver
+	Plugins func() []ProgramObserver
+}
+
+func main() {
+	plugins.LoadFromPath()
+	
+	plugins.Register(&ProgramObserverExt)
+
+	for _, observer := range ProgramObserverExt.Plugins() {
+		observer.ProgramStarted()
+	}
+
+	fmt.Println("Hello World")
+
+	for _, observer := range ProgramObserverExt.Plugins() {
+		observer.ProgramEnded()
+	}
+}
