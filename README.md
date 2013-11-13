@@ -17,7 +17,7 @@ First, you define an "extension point". This is just an interface that plugins c
 		Plugins func() []ProgramObserver
 	}
 
-When you run your program, you load any plugins and register the extension point:
+Now in the main() of your program, you load any plugins and register the extension point:
 
 	plugins.LoadFromPath()
 	plugins.Register(&ProgramObserverExt)
