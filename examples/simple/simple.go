@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/progrium/go-plugins"
+	"github.com/progrium/go-plugins/ottojs"
 )
 
 type ProgramObserver struct {
@@ -15,9 +16,10 @@ var ProgramObserverExt struct {
 }
 
 func main() {
+	plugins.RegisterRuntime(ottojs.GetRuntime())
 	plugins.LoadFromPath()
 	
-	plugins.Register(&ProgramObserverExt)
+	plugins.ExtensionPoint(&ProgramObserverExt)
 
 	for _, observer := range ProgramObserverExt.Plugins() {
 		observer.ProgramStarted()
