@@ -1,8 +1,6 @@
 package ottojs
 
 import (
-	"reflect"
-	"log"
 	"github.com/robertkrimen/otto"
 )
 
@@ -38,21 +36,6 @@ func (r Runtime) CallPlugin(name, function string, args []interface{}) (interfac
 	}
 	exported, _ := value.Export()
 	return exported, nil
-}
-
-func (r Runtime) ConvertArgs(args []reflect.Value) []interface{} {
-	var converted []interface{}
-	for _, v := range args {
-		switch v.Kind() {
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			converted = append(converted, v.Int())
-		case reflect.String:
-			converted = append(converted, v.String())
-		default:
-			log.Fatal("ottojs: Unsupported type for argument:", v.Type())
-		}
-	}
-	return converted
 }
 
 func (r Runtime) LoadEnvironment(environment interface{}) {

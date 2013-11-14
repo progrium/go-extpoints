@@ -73,3 +73,25 @@ A plugin can implement any number of extension point interfaces by calling `impl
 	Yay! It's over!
 
 Change the text in the plugin and run again. No need to recompile your Go. Add another plugin. Remove all plugins. It just works. You can see the [full source for this example](https://github.com/progrium/go-plugins/tree/master/examples/simple) or look at [all the examples](https://github.com/progrium/go-plugins/tree/master/examples).
+
+### Static Plugins
+
+Now that you have all these extenion points defined in your code, maybe you want to use them yourself from Go. Or maybe you're writing a Go library and you want to expose extension points. Static plugins work just like regular plugins, except they're defined in Go. 
+
+	type MyStaticPlugin struct {}
+
+	func (p MyStaticPlugin) ProgramStarted() {
+		fmt.Println("Static plugin: start")
+	}
+
+	func (p MyStaticPlugin) ProgramEnded() {
+		fmt.Println("Static plugin: end")	
+	}
+
+The only difference is that you register them manually, specifying the interfaces they implement:
+
+	plugins.StaticPlugin(&MyStaticPlugin{}, []string{
+		"ProgramObserver",
+	})
+
+Static and regular plugins can live side-by-side, but if you just wanted to use static plugins, simply skip registering any runtimes.

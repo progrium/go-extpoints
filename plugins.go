@@ -11,48 +11,53 @@ import(
 )
 
 // todo: locks!
-var pluginMap map[string]Runtime
-var implementations map[string]map[string]struct{}
-var runtimes map[*Runtime]struct{}
+var plugin struct {
+	loaded 		map[string]runner
+	interfaces 	map[string]map[string]struct{}
+	runtimes 	map[*Runtime]struct{}
+}
+
+type runner interface {
+	CallPlugin(name, function string, args []interface{}) (interface{}, error)
+}
 
 type Runtime interface {
+	runner
 	FileExtension() string
 	InitPlugin(name, source string, implements func(string)) error
-	CallPlugin(name, function string, args []interface{}) (interface{}, error)
 	LoadEnvironment(environment interface{})
-	ConvertArgs(args []reflect.Value) []interface{}
 }
 
 func init() {
-	pluginMap = make(map[string]Runtime)
-	implementations = make(map[string]map[string]struct{})
-	runtimes = make(map[*Runtime]struct{})
+	plugin.loaded = make(map[string]runner)
+	plugin.interfaces = make(map[string]map[string]struct{})
+	plugin.runtimes = make(map[*Runtime]struct{})
 }
 
 func RegisterRuntime(runtime Runtime) {
-	runtimes[&runtime] = struct{}{}
+	plugin.runtimes[&runtime] = struct{}{}
 }
 
 func RegisterEnvironment(environ interface{}) {
 	// TODO
 }
 
-func StaticPlugin(plugin *interface{}, interfaces []string) {
-	// TODO
+func StaticPlugin(instance interface{}, interfaces []string) {
+	name := reflect.TypeOf(instance).Name()
+	for _, interfaceName := range interfaces {
+		registerInterface(name, interfaceName)
+	}
+	plugin.loaded[name] = staticRunner{instance}
 }
 
 func LoadString(name, source string, runtime Runtime) error {
 	err := runtime.InitPlugin(name, source, func(interfaceName string) {
-		// todo: locks
-		if implementations[name] == nil {
-			implementations[name] = make(map[string]struct{})
-		}
-		implementations[name][interfaceName] = struct{}{}
+		registerInterface(name, interfaceName)
 	})
 	if err != nil {
 		return err
 	}
-	pluginMap[name] = runtime
+	plugin.loaded[name] = runtime.(runner)
 	return nil
 }
 
@@ -62,9 +67,10 @@ func LoadFile(path string) error {
 		return err
 	}
 	var runtime Runtime
-	for r := range runtimes {
+	for r := range plugin.runtimes {
 		runtime = *r
-		if strings.HasSuffix(path, runtime.FileExtension()) {
+		fileExt := runtime.FileExtension()
+		if fileExt != "" && strings.HasSuffix(path, fileExt) {
 			break
 		}
 	}
@@ -123,7 +129,7 @@ func ExtensionPoint(ext interface{}) {
 
 func getPluginProxies(extInterface interface{}) []interface{} {
 	var plugins []interface{}
-	for plugin, _ := range pluginMap {
+	for plugin, _ := range plugin.loaded {
 		p := getPluginProxy(plugin, extInterface)
 		if p != nil {
 			plugins = append(plugins, p)
@@ -144,11 +150,11 @@ func getPluginProxy(name string, extInterface interface{}) interface{} {
 		field := pluginProxy.Field(i)
 		structField := extInterfaceType.Field(i)
 		newFunc := func(args []reflect.Value) []reflect.Value {
-			runtime := pluginMap[name]
-			if runtime == nil {
+			runner := plugin.loaded[name]
+			if runner == nil {
 				return []reflect.Value{ reflect.ValueOf(nil) }	
 			}
-			value, err := runtime.CallPlugin(name, structField.Name, runtime.ConvertArgs(args))
+			value, err := runner.CallPlugin(name, structField.Name, convertArgs(args))
 			if err != nil {
 				log.Println("plugins:", err)
 			}
@@ -163,10 +169,56 @@ func getPluginProxy(name string, extInterface interface{}) interface{} {
 }
 
 func hasImplementation(pluginName, interfaceName string) bool {
-	_, found := implementations[pluginName]
+	_, found := plugin.interfaces[pluginName]
 	if found {
-		_, found = implementations[pluginName][interfaceName]
+		_, found = plugin.interfaces[pluginName][interfaceName]
 		return found
 	}
 	return false
+}
+
+func registerInterface(pluginName, interfaceName string) {
+	// todo: locks
+	if plugin.interfaces[pluginName] == nil {
+		plugin.interfaces[pluginName] = make(map[string]struct{})
+	}
+	plugin.interfaces[pluginName][interfaceName] = struct{}{}
+}
+
+func convertArgs(args []reflect.Value) []interface{} {
+	var converted []interface{}
+	for _, v := range args {
+		converted = append(converted, exportValue(v))
+	}
+	return converted
+}
+
+func exportValue(value reflect.Value) interface{} {
+	switch value.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return value.Int()
+	case reflect.String:
+		return value.String()
+	default:
+		log.Fatal("ottojs: Unsupported type for argument:", value.Type())
+		return nil
+	}
+}
+
+type staticRunner struct {
+	plugin interface{}
+}
+
+func (r staticRunner) CallPlugin(name, function string, args []interface{}) (interface{}, error) {
+	p := reflect.ValueOf(r.plugin).Elem()
+	f := p.MethodByName(function)
+	var argValues []reflect.Value
+	for _, v := range args {
+		argValues = append(argValues, reflect.ValueOf(v))
+	}
+	value := f.Call(argValues)
+	if len(value) > 0 {
+		return exportValue(value[0]), nil
+	}
+	return nil, nil
 }
