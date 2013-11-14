@@ -6,5 +6,5 @@ function Name() {
 }
 
 function Process(a, b) {
-	return a + " " + b
+	return "args: " + a + " " + b
 }

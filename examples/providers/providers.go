@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/progrium/go-plugins"
+	"github.com/progrium/go-plugins/ottojs"
 )
 
 type ListProvider struct {
@@ -14,9 +15,10 @@ var ListProviderExt struct {
 }
 
 func main() {
+	plugins.RegisterRuntime(ottojs.GetRuntime())
 	plugins.LoadFromPath()
 	
-	plugins.Register(&ListProviderExt)
+	plugins.ExtensionPoint(&ListProviderExt)
 
 	fmt.Println("Here is a list, produced by plugins:")
 

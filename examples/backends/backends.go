@@ -5,6 +5,7 @@ import (
 	"os"
 	"flag"
 	"github.com/progrium/go-plugins"
+	"github.com/progrium/go-plugins/ottojs"
 )
 
 type PluggableBackend struct {
@@ -17,8 +18,10 @@ var PluggableBackendExt struct {
 }
 
 func main() {
+	plugins.RegisterRuntime(ottojs.GetRuntime())
 	plugins.LoadFromPath()
-	plugins.Register(&PluggableBackendExt)
+	
+	plugins.ExtensionPoint(&PluggableBackendExt)
 
 	flag.Parse()
 

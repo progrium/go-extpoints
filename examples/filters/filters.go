@@ -5,6 +5,7 @@ import (
 	"os"
 	"bufio"
 	"github.com/progrium/go-plugins"
+	"github.com/progrium/go-plugins/ottojs"
 )
 
 type TextFilter struct {
@@ -16,9 +17,10 @@ var TextFilterExt struct {
 }
 
 func main() {
+	plugins.RegisterRuntime(ottojs.GetRuntime())
 	plugins.LoadFromPath()
-	
-	plugins.Register(&TextFilterExt)
+
+	plugins.ExtensionPoint(&TextFilterExt)
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {

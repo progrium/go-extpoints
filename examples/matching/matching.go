@@ -5,6 +5,7 @@ import (
 	"os"
 	"flag"
 	"github.com/progrium/go-plugins"
+	"github.com/progrium/go-plugins/ottojs"
 )
 
 type OutputRenderer struct {
@@ -17,8 +18,9 @@ var OutputRendererExt struct {
 }
 
 func main() {
+	plugins.RegisterRuntime(ottojs.GetRuntime())
 	plugins.LoadFromPath()
-	plugins.Register(&OutputRendererExt)
+	plugins.ExtensionPoint(&OutputRendererExt)
 
 	flag.Parse()
 
