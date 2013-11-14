@@ -24,6 +24,7 @@ func (r Runtime) InitPlugin(name, source string, implements func(string)) error 
 		implements(call.Argument(0).String())
     	return otto.UndefinedValue()
 	})
+	context.Run("implements_ = implements")
 	context.Run(source)
 	r.plugins[name] = context
 	return nil
