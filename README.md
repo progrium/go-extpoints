@@ -10,22 +10,23 @@ Thanks to [Otto](https://github.com/robertkrimen/otto), [Go reflection](http://g
 
 ### Extension Points
 
-First, you define an "extension point" for you application. This is basically a set of hooks that a plugin can implement to extend some aspect of your application. Defining an extension point involves writing an interface (though not a real interface) that plugins can implement, and then an extension point stub. Here is a simple observer pattern extension point:
+First, you define "extension points" for your application. An extension point is an API or a set of hooks that a plugin can implement to extend some aspect of your application. Defining an extension point involves writing an interface (though not a real interface) that plugins can implement, and then also an extension point singleton stub. Here is a simple observer pattern extension point:
 
 	type ProgramObserver struct {
 		ProgramStarted func()
 		ProgramEnded func()
 	}
+
 	var ProgramObserverExt struct {
 		Plugin func(string) ProgramObserver
 		Plugins func() []ProgramObserver
 	}
 
-You also want to register your extension point for it to be active:
+Then you register your extension point for it to be active:
 
-	plugins.Register(&ProgramObserverExt)
+	plugins.ExtensionPoint(&ProgramObserverExt)
 
-Now use the extension point in your program. `.Plugins()` gets you all plugins implementing that extension point interface, whereas `.Plugin(name)` lets you get a specific plugin by name. More often you use the former; the latter is used when you are using plugins to provide configurable backends. But here's `.Plugins()` in our app:
+Now use the extension point in your program from the singleton, which has been fully implemented by declaring it with `plugins.ExtensionPoint()`. `.Plugins()` gets you all plugins implementing that extension point interface, whereas `.Plugin(name)` lets you get a specific plugin by name. More often you use the former; the latter is used when you are using plugins to provide configurable backends. But here's `.Plugins()` in our app:
 
 	for _, observer := range ProgramObserverExt.Plugins() {
 		observer.ProgramStarted()
