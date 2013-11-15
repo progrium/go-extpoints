@@ -48,6 +48,8 @@ Plugins run in runtimes, which define a scripting environment. Out of the box, w
 
 	plugins.RegisterRuntime(ottojs.GetRuntime())
 
+Writing runtimes is relatively easy. You just implemenet the `plugins.Runtime` interface. [Here's a runtime implementation for Lua that took about 30 minutes to write.](https://github.com/progrium/go-plugins-lua)
+
 ### Plugins
 
 We're about to write a plugin! We'll call it `happy.js` and put it in a `plugins` directory. This is the default place to look when you load with `plugins.LoadFromPath()`, which you can override with the `PLUGIN_PATH` environment variable. There are plenty of other ways to load plugins, but this is the easiest:
