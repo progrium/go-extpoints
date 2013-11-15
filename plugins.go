@@ -61,11 +61,7 @@ func LoadString(name, source string, runtime Runtime) error {
 	return nil
 }
 
-func LoadFile(path string) error {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
+func findRuntimeForFile(path string) Runtime {
 	var runtime Runtime
 	for r := range plugin.runtimes {
 		runtime = *r
@@ -74,6 +70,15 @@ func LoadFile(path string) error {
 			break
 		}
 	}
+	return runtime
+}
+
+func LoadFile(path string) error {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	runtime := findRuntimeForFile(path)
 	if runtime == nil {
 		return errors.New("plugins: no runtime found to handle: "+path)
 	}
@@ -91,7 +96,8 @@ func LoadFromPath() error {
 		return err
 	}
 	for _, entry := range dir {
-		if strings.HasSuffix(entry.Name(), ".js") {
+		runtime := findRuntimeForFile(path)
+		if runtime != nil {
 			err = LoadFile(path + "/" + entry.Name())
 			if err != nil {
 				return err

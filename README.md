@@ -95,3 +95,7 @@ The only difference is that you register them manually, specifying the interface
 	})
 
 Static and regular plugins can live side-by-side, but if you just wanted to use static plugins, simply skip registering any runtimes.
+
+## License
+
+BSD
