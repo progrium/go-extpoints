@@ -78,7 +78,7 @@ Change the text in the plugin and run again. No need to recompile your Go. Add a
 
 ### Static Plugins
 
-Now that you have all these extenion points defined in your code, maybe you want to use them yourself from Go. Or maybe you're writing a Go library and you want to expose extension points. Static plugins work just like regular plugins, except they're defined in Go. 
+Now that you have all these extension points defined in your code, maybe you want to use them yourself from Go. Or maybe you're writing a Go library and you want to expose extension points. Static plugins work just like regular plugins, except they're defined in Go. 
 
 	type MyStaticPlugin struct {}
 
