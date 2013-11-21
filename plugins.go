@@ -1,20 +1,21 @@
 package plugins
 
-import(
+import (
+	"errors"
 	"io/ioutil"
-	"strings"
-	"os"
 	"log"
+	"os"
 	"path/filepath"
 	"reflect"
-	"errors"
+	"strings"
 )
 
 // todo: locks!
 var plugin struct {
-	loaded 		map[string]runner
-	interfaces 	map[string]map[string]struct{}
-	runtimes 	map[*Runtime]struct{}
+	loaded     map[string]runner
+	interfaces map[string]map[string]struct{}
+	runtimes   map[*Runtime]struct{}
+	globals    map[string]interface{}
 }
 
 type runner interface {
@@ -25,21 +26,34 @@ type Runtime interface {
 	runner
 	FileExtension() string
 	InitPlugin(name, source string, implements func(string)) error
-	LoadEnvironment(environment interface{})
+	SetGlobals(globals map[string]interface{})
 }
 
 func init() {
 	plugin.loaded = make(map[string]runner)
 	plugin.interfaces = make(map[string]map[string]struct{})
 	plugin.runtimes = make(map[*Runtime]struct{})
+	plugin.globals = make(map[string]interface{})
 }
 
 func RegisterRuntime(runtime Runtime) {
 	plugin.runtimes[&runtime] = struct{}{}
 }
 
-func RegisterEnvironment(environ interface{}) {
-	// TODO
+func SetGlobals(globals map[string]interface{}) {
+	for k, v := range globals {
+		plugin.globals[k] = v
+	}
+	for name := range plugin.loaded {
+		r, ok := plugin.loaded[name].(Runtime)
+		if ok {
+			r.SetGlobals(plugin.globals)
+		}
+	}
+}
+
+func GetGlobal(name string) interface{} {
+	return plugin.globals[name]
 }
 
 func StaticPlugin(instance interface{}, interfaces []string) {
@@ -80,7 +94,7 @@ func LoadFile(path string) error {
 	}
 	runtime := findRuntimeForFile(path)
 	if runtime == nil {
-		return errors.New("plugins: no runtime found to handle: "+path)
+		return errors.New("plugins: no runtime found to handle: " + path)
 	}
 	name := strings.Split(filepath.Base(path), ".")[0]
 	return LoadString(name, string(data), runtime)
@@ -110,28 +124,27 @@ func LoadFromPath() error {
 func ExtensionPoint(ext interface{}) {
 	extPtr := reflect.ValueOf(ext).Elem()
 	extImpl := reflect.New(reflect.TypeOf(ext).Elem()).Elem()
-	
+
 	pluginField := extImpl.FieldByName("Plugin")
 	extInterface := reflect.New(pluginField.Type().Out(0)).Interface()
 	pluginFunc := func(params []reflect.Value) []reflect.Value {
 		plugin := getPluginProxy(params[0].String(), extInterface)
-		return []reflect.Value{ reflect.ValueOf(plugin) }
+		return []reflect.Value{reflect.ValueOf(plugin)}
 	}
 	pluginField.Set(reflect.MakeFunc(pluginField.Type(), pluginFunc))
-	
+
 	pluginsField := extImpl.FieldByName("Plugins")
 	pluginsFunc := func(params []reflect.Value) []reflect.Value {
 		s := reflect.MakeSlice(reflect.SliceOf(pluginField.Type().Out(0)), 0, 0)
 		for _, p := range getPluginProxies(extInterface) {
 			s = reflect.Append(s, reflect.ValueOf(p))
 		}
-		return []reflect.Value{ s }
+		return []reflect.Value{s}
 	}
 	pluginsField.Set(reflect.MakeFunc(pluginsField.Type(), pluginsFunc))
-	
+
 	extPtr.Set(extImpl)
 }
-
 
 func getPluginProxies(extInterface interface{}) []interface{} {
 	var plugins []interface{}
@@ -150,7 +163,7 @@ func getPluginProxy(name string, extInterface interface{}) interface{} {
 		return nil
 	}
 	pluginProxy := reflect.New(extInterfaceType).Elem()
-	// loop over fields defined in extInterfaceType, 
+	// loop over fields defined in extInterfaceType,
 	// replacing them in v with implementations
 	for i, n := 0, extInterfaceType.NumField(); i < n; i++ {
 		field := pluginProxy.Field(i)
@@ -158,17 +171,17 @@ func getPluginProxy(name string, extInterface interface{}) interface{} {
 		newFunc := func(args []reflect.Value) []reflect.Value {
 			runner := plugin.loaded[name]
 			if runner == nil {
-				return []reflect.Value{ reflect.ValueOf(nil) }	
+				return []reflect.Value{reflect.ValueOf(nil)}
 			}
 			value, err := runner.CallPlugin(name, structField.Name, convertArgs(args))
 			if err != nil {
 				log.Println("plugins:", err)
 			}
-        	if value != nil {
-        		return []reflect.Value{ reflect.ValueOf(value) }	
-        	}
-        	return []reflect.Value{}
-    	}
+			if value != nil {
+				return []reflect.Value{reflect.ValueOf(value)}
+			}
+			return []reflect.Value{}
+		}
 		field.Set(reflect.MakeFunc(field.Type(), newFunc))
 	}
 	return pluginProxy.Interface()

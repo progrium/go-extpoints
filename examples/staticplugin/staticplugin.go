@@ -8,26 +8,30 @@ import (
 
 type ProgramObserver struct {
 	ProgramStarted func()
-	ProgramEnded func()
+	ProgramEnded   func()
 }
+
 var ProgramObserverExt struct {
-	Plugin func(string) ProgramObserver
+	Plugin  func(string) ProgramObserver
 	Plugins func() []ProgramObserver
 }
 
-type MyStaticPlugin struct {}
+type MyStaticPlugin struct{}
 
 func (p MyStaticPlugin) ProgramStarted() {
-	fmt.Println("Static plugin: start")
+	fmt.Println(plugins.GetGlobal("prefix").(string) + ": start")
 }
 
 func (p MyStaticPlugin) ProgramEnded() {
-	fmt.Println("Static plugin: end")	
+	fmt.Println(plugins.GetGlobal("prefix").(string) + ": end")
 }
 
 func main() {
-	plugins.RegisterRuntime(ottojs.GetRuntime())	
+	plugins.RegisterRuntime(ottojs.GetRuntime())
 	plugins.ExtensionPoint(&ProgramObserverExt)
+	plugins.SetGlobals(map[string]interface{}{
+		"prefix": "Static plugin",
+	})
 
 	plugins.StaticPlugin(&MyStaticPlugin{}, []string{
 		"ProgramObserver",

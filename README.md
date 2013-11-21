@@ -76,6 +76,23 @@ A plugin can implement any number of extension point interfaces by calling `impl
 
 Change the text in the plugin and run again. No need to recompile your Go. Add another plugin. Remove all plugins. It just works. You can see the [full source for this example](https://github.com/progrium/go-plugins/tree/master/examples/simple) or look at [all the examples](https://github.com/progrium/go-plugins/tree/master/examples).
 
+### Globals
+
+You can set shared global values for all plugins. This is useful for exposing an API to plugins. You can expose any value the runtime supports, however they aren't kept synchronized. If a plugin changes a value, that change is not reflected in other plugins, so they should be treated as immutable.
+
+	plugins.SetGlobals(map[string]interface{}{
+		"Plugin.Hello": "Hello world",
+		"Plugin.Print": func(text string) {
+			fmt.Println(text)
+		},
+	})
+
+This would expose a string and a function to plugins under a global `Plugin` object. You can use any object namespace and the parent objects will be created by the runtime. Using these in the plugin might look like this:
+
+	function UseGlobals() {
+		Plugin.Print(Plugin.Hello)
+	}
+
 ### Static Plugins
 
 Now that you have all these extension points defined in your code, maybe you want to use them yourself from Go. Or maybe you're writing a Go library and you want to expose extension points. Static plugins work just like regular plugins, except they're defined in Go. 
@@ -97,6 +114,8 @@ The only difference is that you register them manually, specifying the interface
 	})
 
 Static and regular plugins can live side-by-side, but if you just wanted to use static plugins, simply skip registering any runtimes.
+
+Static plugins can also access any globals that have been set. You just use the `plugins.GetGlobal(name)` function. However, it returns an `interface{}` value, so you need to use type assertion. It might be more convenient to not use globals if you only have static plugins. Or if you do plan to support dynamic plugins, set your globals with references to objects that can be accessed directly by static plugins.
 
 ## License
 
