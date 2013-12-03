@@ -46,9 +46,10 @@ func (r Runtime) SetGlobals(globals map[string]interface{}) {
 		for pluginName := range r.plugins {
 			context := r.plugins[pluginName]
 			if reflect.TypeOf(v).Kind() == reflect.Func {
-				v = funcToOtto(context, reflect.ValueOf(v))
+				setValueAtPath(context, k, funcToOtto(context, reflect.ValueOf(v)))
+			} else {
+				setValueAtPath(context, k, v)
 			}
-			setValueAtPath(context, k, v)
 		}
 	}
 }
@@ -79,7 +80,7 @@ func funcToOtto(context *otto.Otto, fn reflect.Value) interface{} {
 		}
 		ret := fn.Call(convertedArgs)
 		if len(ret) > 0 {
-			val, _ := context.ToValue(ret[0])
+			val, _ := context.ToValue(ret[0].Interface())
 			return val
 		} else {
 			return otto.UndefinedValue()
