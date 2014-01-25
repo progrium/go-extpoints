@@ -56,8 +56,7 @@ func GetGlobal(name string) interface{} {
 	return plugin.globals[name]
 }
 
-func StaticPlugin(instance interface{}, interfaces []string) {
-	name := reflect.TypeOf(instance).Name()
+func StaticPlugin(name string, instance interface{}, interfaces []string) {
 	for _, interfaceName := range interfaces {
 		registerInterface(name, interfaceName)
 	}
