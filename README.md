@@ -24,7 +24,7 @@ First, you define "extension points" for your application. An extension point is
 
 Then you register your extension point for it to be active:
 
-	plugins.ExtensionPoint(&ProgramObserverExt)
+	plugins.ExtensionPoint(&ProgramObserverExt{})
 
 Now use the extension point in your program from the singleton, which has been fully implemented by declaring it with `plugins.ExtensionPoint()`. `.Plugins()` gets you all plugins implementing that extension point interface, whereas `.Plugin(name)` lets you get a specific plugin by name. More often you use the former; the latter is used when you are using plugins to provide configurable backends. But here's `.Plugins()` in our app:
 
