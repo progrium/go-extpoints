@@ -38,8 +38,7 @@ func main() {
 		usage()
 		os.Exit(2)
 	}
-	cmdName := os.Args[1]
-	cmd, exists := subcommands.Lookup(cmdName)
+	cmd, exists := subcommands.Lookup(os.Args[1])
 	if !exists {
 		usage()
 		os.Exit(2)
