@@ -58,9 +58,20 @@ func (ep *extensionPoint) registerNamed(component interface{}, name string) bool
 	defer ep.Unlock()
 	_, exists := ep.components[name]
 	if exists {
-		return !exists
+		return false
 	}
 	ep.components[name] = component
+	return true
+}
+
+func (ep *extensionPoint) unregister(name string) bool {
+	ep.Lock()
+	defer ep.Unlock()
+	_, exists := ep.components[name]
+	if !exists {
+		return false
+	}
+	delete(ep.components, name)
 	return true
 }
 
@@ -106,6 +117,10 @@ var {{.Var}} = &{{.Type}}{
 
 type {{.Type}} struct {
 	*extensionPoint
+}
+
+func (ep *{{.Type}}) Unregister(name string) bool {
+	return ep.unregister(name)
 }
 
 func (ep *{{.Type}}) Register(component {{.Name}}) bool {

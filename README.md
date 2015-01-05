@@ -79,6 +79,7 @@ All interfaces defined in your `extpoints` subpackage will be turned into extens
 type ExtensionPoint interface {
 	Register(component <Interface>) bool
 	RegisterNamed(component <Interface>, name string) bool
+	Unregister(name string) bool
 	Lookup(name string) (<Interface>, bool)
 	All() map[string]<Interface>
 }

@@ -56,9 +56,20 @@ func (ep *extensionPoint) registerNamed(component interface{}, name string) bool
 	defer ep.Unlock()
 	_, exists := ep.components[name]
 	if exists {
-		return !exists
+		return false
 	}
 	ep.components[name] = component
+	return true
+}
+
+func (ep *extensionPoint) unregister(name string) bool {
+	ep.Lock()
+	defer ep.Unlock()
+	_, exists := ep.components[name]
+	if !exists {
+		return false
+	}
+	delete(ep.components, name)
 	return true
 }
 
@@ -106,6 +117,10 @@ type lifecycleContributorExt struct {
 	*extensionPoint
 }
 
+func (ep *lifecycleContributorExt) Unregister(name string) bool {
+	return ep.unregister(name)
+}
+
 func (ep *lifecycleContributorExt) Register(component LifecycleContributor) bool {
 	return ep.register(component)
 }
@@ -135,6 +150,10 @@ var CommandProviders = &commandProviderExt{
 
 type commandProviderExt struct {
 	*extensionPoint
+}
+
+func (ep *commandProviderExt) Unregister(name string) bool {
+	return ep.unregister(name)
 }
 
 func (ep *commandProviderExt) Register(component CommandProvider) bool {
