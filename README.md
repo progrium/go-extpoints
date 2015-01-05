@@ -91,6 +91,20 @@ func Register(component interface{}) []string
 func RegisterNamed(component interface{}, name string) []string
 ```
 
+## Making it easy to install extensions
+
+Assuming you tell third-party developers to call your `extpoints.Register` in their package's `init()`, you're able activate them with a side-effect import (using a blank import name). Make this easy for users to enable/disable via comments, or add their own without worrying about messing with your code by having a separate `extensions.go` or `plugins.go` file with just these imports:
+
+```
+package yourpackage
+
+import (
+	_ "github.com/you/some-extension"
+	_ "github.com/third-party/another-extension"
+)
+
+```
+
 ## Why a subpackage?
 
 There are number of reasons this turned out to be a very elegant solution. 
