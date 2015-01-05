@@ -2,7 +2,7 @@
 
 This package, named short for "Go extension points", provides a simple component model for making your Go packages, libraries, and applications extensible in a standard way. 
 
-It expands on the foundation of Go interfaces and provides a meta-API for accessing and registering "components", objects that implement one or more "extension point" interfaces. It not only lets third-party packages hook in as build-time extensions, but also encourages better organization of your own package and subpackages. 
+It expands on the foundation of Go interfaces and provides a meta-API for accessing and registering "components", objects that implement one or more "extension point" interfaces. It not only lets third-party packages hook in as build-time extensions, but also encourages better organization of your own packages. 
 
 ## Getting the tool
 
@@ -10,7 +10,7 @@ It expands on the foundation of Go interfaces and provides a meta-API for access
 
 ## Quick Example
 
-Here is a simple Go application that lets components hook into `main()` as subcommands by implementing an extension point interface called `Subcommand`. Here is our `main.go` that we'll say lives under `$GOPATH/src/github.com/quick/example`:
+Here is a simple Go application that lets components hook into `main()` as subcommands by implementing an extension point interface called `Subcommand`. Assuming our package lives under `$GOPATH/src/github.com/quick/example`, here is our `main.go`:
 
 ```go
 //go:generate go-extpoints
@@ -45,7 +45,7 @@ func main() {
 }
 ```
 
-Note the extension point is referred to by the plural of the `Subcommand` interface and under the `extpoints` subpackage. We need to create that package with a Go file in it to define our extension point interface. This is `extpoints/interfaces.go`:
+Note the extension point is referred to by the plural of our interface `Subcommand` and under the `extpoints` subpackage. We need to create that package with a Go file in it to define our extension point interface. This is `extpoints/interfaces.go`:
 
 ```go
 package extpoints
@@ -55,7 +55,7 @@ type Subcommand interface {
 }
 ```
 
-Now the `go-extpoints` tool comes in. It hooks into `go generate` to produce extension point code in our `extpoints` subpackage around the interfaces defined there.
+We use `go generate`, which calls `go-extpoints`, to produce extension point code in our `extpoints` subpackage around the interfaces defined there.
 
 	$ go generate
 	 ...
@@ -119,7 +119,7 @@ func Unregister(name string) []string
 
 Assuming you tell third-party developers to call your `extpoints.Register` in their `init()`, you can link them with a side-effect import (using a blank import name). 
 
-Make this easy for users to enable/disable via comments, or add their own without worrying about messing with your code by having a separate `extensions.go` or `plugins.go` file with just these imports:
+You can make this easy for users to enable/disable via comments, or add their own without worrying about messing with your code by having a separate `extensions.go` or `plugins.go` file with just these imports:
 
 ```go
 package yourpackage
@@ -173,16 +173,11 @@ for _, handler := range extpoints.RequestHandlers.All() {
 
 ## Why the `extpoints` subpackage?
 
-There are number of reasons this turned out to be a very elegant solution. 
+Since we force the convention of a subpackage called `extpoints`, it makes it very easy to identify a package as having extension points from looking at the project tree. You then know where to look to find the interfaces that are exposed as extension points.
 
-First, since we force the convention of a subpackage called `extpoints`, it makes it very easy to identify a package as having extension points from looking at the project tree. You then know where to look to find the interfaces that are exposed as extension points.
-
-Second, third-party packages have a well known package to import for registering. Whether you have extension points for a library package or a command with just a `main` package, there's always a definite `extpoints` package there to import.
+Third-party packages have a well known package to import for registering. Whether you have extension points for a library package or a command with just a `main` package, there's always a definite `extpoints` package there to import.
 
 It also makes it clearer in your code when you're using extension points. You have to explicitly import the package, then call `extpoints.<ExtensionPoint>` when using them. This helps identify where extension points actually hook into your program.
-
-Lastly, it produces its own GoDoc page. Extension points are designed to use existing Go documentation infrastructure. But in such a way that gives them their own namespace. Your extension point APIs are different than regular APIs. They're not APIs to call, but APIs to implement, specifically to extend your package. They're the "back office" APIs of your package.
-
 
 ## Groundwork for Dynamic Extensions
 
@@ -190,7 +185,7 @@ Although this only seems to allow for compile-time extensibility, this itself is
 
 However, it also lays the groundwork for other dynamic extensions. I've used this model to wrap extension points for components in embedded scripting languages, as hook scripts, as remote plugin daemons via RPC, or all of the above implemented as components themselves! 
 
-No matter how you're thinking about dynamic extensions later on, using `go-extpoints` gives you a lot of options. Once Go supports dynamic libraries? This will work perfectly with that too.
+No matter how you're thinking about dynamic extensions later on, using `go-extpoints` gives you a lot of options. Once Go supports dynamic libraries? This will work perfectly with that, too.
 
 ## Inspiration
 
