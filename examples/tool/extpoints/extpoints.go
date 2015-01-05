@@ -6,40 +6,34 @@ import (
 	"sync"
 )
 
-func typeName(obj interface{}) string {
-	return reflect.TypeOf(obj).Elem().Name()
-}
-
-var extensions = struct {
+var registry = struct {
 	sync.Mutex
-	m map[string]*extensionPoint
+	extpoints map[string]*extensionPoint
 }{
-	m: make(map[string]*extensionPoint),
+	extpoints: make(map[string]*extensionPoint),
 }
 
 type extensionPoint struct {
 	sync.Mutex
-	iface      interface{}
-	ifaceName  string
-	extensions map[string]interface{}
+	iface      reflect.Type
+	components map[string]interface{}
 }
 
-func newExtensionPoint(i interface{}) *extensionPoint {
+func newExtensionPoint(iface interface{}) *extensionPoint {
 	ep := &extensionPoint{
-		iface:      i,
-		ifaceName:  typeName(i),
-		extensions: make(map[string]interface{}),
+		iface:      reflect.TypeOf(iface).Elem(),
+		components: make(map[string]interface{}),
 	}
-	extensions.Lock()
-	defer extensions.Unlock()
-	extensions.m[ep.ifaceName] = ep
+	registry.Lock()
+	defer registry.Unlock()
+	registry.extpoints[ep.iface.Name()] = ep
 	return ep
 }
 
 func (ep *extensionPoint) lookup(name string) (ext interface{}, ok bool) {
 	ep.Lock()
 	defer ep.Unlock()
-	ext, ok = ep.extensions[name]
+	ext, ok = ep.components[name]
 	return
 }
 
@@ -47,55 +41,55 @@ func (ep *extensionPoint) all() map[string]interface{} {
 	ep.Lock()
 	defer ep.Unlock()
 	registered := make(map[string]interface{})
-	for k, v := range ep.extensions {
+	for k, v := range ep.components {
 		registered[k] = v
 	}
 	return registered
 }
 
-func (ep *extensionPoint) register(extension interface{}) bool {
-	return ep.registerNamed(extension, typeName(extension))
+func (ep *extensionPoint) register(component interface{}) bool {
+	return ep.registerNamed(component, reflect.TypeOf(component).Elem().Name())
 }
 
-func (ep *extensionPoint) registerNamed(extension interface{}, name string) bool {
+func (ep *extensionPoint) registerNamed(component interface{}, name string) bool {
 	ep.Lock()
 	defer ep.Unlock()
-	_, exists := ep.extensions[name]
+	_, exists := ep.components[name]
 	if exists {
 		return !exists
 	}
-	ep.extensions[name] = extension
+	ep.components[name] = component
 	return true
 }
 
-func implements(extension interface{}) []string {
+func implements(component interface{}) []string {
 	var ifaces []string
-	for name, ep := range extensions.m {
-		if reflect.TypeOf(extension).Implements(reflect.TypeOf(ep.iface).Elem()) {
+	for name, ep := range registry.extpoints {
+		if reflect.TypeOf(component).Implements(ep.iface) {
 			ifaces = append(ifaces, name)
 		}
 	}
 	return ifaces
 }
 
-func RegisterNamed(extension interface{}, name string) []string {
-	extensions.Lock()
-	defer extensions.Unlock()
+func RegisterNamed(component interface{}, name string) []string {
+	registry.Lock()
+	defer registry.Unlock()
 	var ifaces []string
-	for _, iface := range implements(extension) {
-		if ok := extensions.m[iface].registerNamed(extension, name); ok {
+	for _, iface := range implements(component) {
+		if ok := registry.extpoints[iface].registerNamed(component, name); ok {
 			ifaces = append(ifaces, iface)
 		}
 	}
 	return ifaces
 }
 
-func Register(extension interface{}) []string {
-	extensions.Lock()
-	defer extensions.Unlock()
+func Register(component interface{}) []string {
+	registry.Lock()
+	defer registry.Unlock()
 	var ifaces []string
-	for _, iface := range implements(extension) {
-		if ok := extensions.m[iface].register(extension); ok {
+	for _, iface := range implements(component) {
+		if ok := registry.extpoints[iface].register(component); ok {
 			ifaces = append(ifaces, iface)
 		}
 	}
@@ -112,12 +106,12 @@ type lifecycleContributorExt struct {
 	*extensionPoint
 }
 
-func (ep *lifecycleContributorExt) Register(extension LifecycleContributor) bool {
-	return ep.register(extension)
+func (ep *lifecycleContributorExt) Register(component LifecycleContributor) bool {
+	return ep.register(component)
 }
 
-func (ep *lifecycleContributorExt) RegisterNamed(extension LifecycleContributor, name string) bool {
-	return ep.registerNamed(extension, name)
+func (ep *lifecycleContributorExt) RegisterNamed(component LifecycleContributor, name string) bool {
+	return ep.registerNamed(component, name)
 }
 
 func (ep *lifecycleContributorExt) Lookup(name string) (LifecycleContributor, bool) {
@@ -143,12 +137,12 @@ type commandProviderExt struct {
 	*extensionPoint
 }
 
-func (ep *commandProviderExt) Register(extension CommandProvider) bool {
-	return ep.register(extension)
+func (ep *commandProviderExt) Register(component CommandProvider) bool {
+	return ep.register(component)
 }
 
-func (ep *commandProviderExt) RegisterNamed(extension CommandProvider, name string) bool {
-	return ep.registerNamed(extension, name)
+func (ep *commandProviderExt) RegisterNamed(component CommandProvider, name string) bool {
+	return ep.registerNamed(component, name)
 }
 
 func (ep *commandProviderExt) Lookup(name string) (CommandProvider, bool) {
