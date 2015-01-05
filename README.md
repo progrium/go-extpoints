@@ -31,17 +31,16 @@ func usage() {
 	for name, _ := range subcommands.All() {
 		fmt.Println(" - ", name)
 	}
+	os.Exit(2)
 }
 
 func main() {
 	if len(os.Args) < 2 {
 		usage()
-		os.Exit(2)
 	}
 	cmd, exists := subcommands.Lookup(os.Args[1])
 	if !exists {
 		usage()
-		os.Exit(2)
 	}
 	cmd.Run(os.Args[2:])
 }
