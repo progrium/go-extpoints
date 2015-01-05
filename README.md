@@ -191,6 +191,8 @@ No matter how you're thinking about dynamic extensions later on, using `go-extpo
 
 This project and component model is a lightweight, Go idiomatic port of the [component architecture](http://trac.edgewall.org/wiki/TracDev/ComponentArchitecture) used in Trac, which is written in Python. It's taken about a year to get this right in Go.
 
+![Trac Component Architecture](http://trac.edgewall.org/raw-attachment/wiki/TracDev/ComponentArchitecture/xtnpt.png)
+
 ## License
 
 BSD
