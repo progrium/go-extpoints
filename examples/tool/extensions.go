@@ -1,5 +1,5 @@
 package main
 
 import (
-//_ "github.com/progrium/go-extpoints/_examples/extensions/tool-example"
+//_ "github.com/progrium/go-extpoints/examples/extensions/tool-example"
 )

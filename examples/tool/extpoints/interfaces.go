@@ -1,7 +1,7 @@
 package extpoints
 
 import (
-	"github.com/progrium/go-extpoints/_examples/tool/types"
+	"github.com/progrium/go-extpoints/examples/tool/types"
 )
 
 type LifecycleContributor interface {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/progrium/go-extpoints/_examples/tool/types"
+	"github.com/progrium/go-extpoints/examples/tool/types"
 )
 
 func init() {

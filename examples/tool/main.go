@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/progrium/go-extpoints/_examples/tool/extpoints"
-	"github.com/progrium/go-extpoints/_examples/tool/types"
+	"github.com/progrium/go-extpoints/examples/tool/extpoints"
+	"github.com/progrium/go-extpoints/examples/tool/types"
 )
 
 var (
