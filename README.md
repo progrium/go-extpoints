@@ -116,14 +116,15 @@ for _, listener := range extpoints.EventListeners.All() {
 
 #### Lookup Only One
 ```
-driver, registered := extpoints.StorageDrivers.Lookup(config.Get("storage-driver"))
+driverName := config.Get("storage-driver")
+driver, registered := extpoints.StorageDrivers.Lookup(driverName)
 if !registered {
-	log.Fatalf("storage driver '%s' not installed", config.Get("storage-driver"))
+	log.Fatalf("storage driver '%s' not installed", driverName)
 }
 driver.StoreObject(object)
 ```
 
-#### Passing References
+#### Passing by Reference
 ```
 for _, filter := range extpoints.RequestFilters.All() {
 	filter.FilterRequest(req)
