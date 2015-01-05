@@ -10,7 +10,9 @@ It expands on the foundation of Go interfaces and provides a meta-API for access
 
 ## Quick Example
 
-Here is a simple Go application that lets components hook into `main()` as subcommands by implementing an extension point interface called `Subcommand`. Assuming our package lives under `$GOPATH/src/github.com/quick/example`, here is our `main.go`:
+Here is a simple Go application that lets components hook into `main()` as subcommands simply by implementing an interface we'll make called `Subcommand`. This interface will have just one method `Run()`, but you can make extension points based on any interface.
+
+Assuming our package lives under `$GOPATH/src/github.com/quick/example`, here is our `main.go`:
 
 ```go
 //go:generate go-extpoints
@@ -44,8 +46,11 @@ func main() {
 	cmd.Run(os.Args[2:])
 }
 ```
+Two things to note. First, the `go:generate` directive at the top. This tells `go generate` it needs to run `go-extpoints`, which will happen in a moment. 
 
-Note the extension point is referred to by the plural of our interface `Subcommand` and under the `extpoints` subpackage. We need to create that package with a Go file in it to define our extension point interface. This is `extpoints/interfaces.go`:
+Another thing to note, the extension point is accessed by a variable named by the plural of our interface `Subcommand` and lives under the `extpoints` subpackage. 
+
+We need to create that subpackage with a Go file in it to define our interface used for this extension point. This is our `extpoints/interfaces.go`:
 
 ```go
 package extpoints
@@ -55,7 +60,7 @@ type Subcommand interface {
 }
 ```
 
-We use `go generate`, which calls `go-extpoints`, to produce extension point code in our `extpoints` subpackage around the interfaces defined there.
+We use `go generate` now to produce the extension point code in our `extpoints` subpackage. These extension points are based on any Go interfaces you've defined in there. In our case, just `Subcommand`.
 
 	$ go generate
 	 ...
@@ -82,7 +87,7 @@ func (p *HelloComponent) Run(args []string) {
 }
 ```
 
-Now when we build and run the app, it shows `hello` as a subcommand. 
+Now when we build and run the app, it shows `hello` as a subcommand. We've registered the component with the name `hello`, which we happen to use to identify the name of the subcommand. Component names are optional, but can be handy for situations like this one.
 
 Certainly, the value of extension points becomes clearer with larger applications and more interesting interfaces. But just consider now that the component defined in `hello.go` *could* exist in another package in another repo. You'd just have to import it and rebuild to let it hook into our application.
 
