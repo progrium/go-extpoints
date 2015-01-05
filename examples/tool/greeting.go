@@ -8,12 +8,12 @@ import (
 )
 
 func init() {
-	commandProviders.Register(new(greetingModule))
+	commandProviders.Register(new(greetingComponent))
 }
 
-type greetingModule struct{}
+type greetingComponent struct{}
 
-func (h *greetingModule) Commands() []*types.Command {
+func (h *greetingComponent) Commands() []*types.Command {
 	return []*types.Command{cmdHello, cmdGoodbye}
 }
 

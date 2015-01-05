@@ -13,17 +13,18 @@ import (
 )
 
 func init() {
-	cmdHelp.Run = runHelp // break init loop
-	commandProviders.Register(new(helpModule))
+	//cmdHelp.Run = runHelp // break init loop
+	commandProviders.Register(new(helpComponent))
 }
 
-type helpModule struct{}
+type helpComponent struct{}
 
-func (h *helpModule) Commands() []*types.Command {
+func (h *helpComponent) Commands() []*types.Command {
 	return []*types.Command{cmdHelp}
 }
 
 var cmdHelp = &types.Command{
+	Run:   runHelp,
 	Usage: "help [<topic>]",
 	Long:  `Help shows usage for a command or other topic.`,
 }

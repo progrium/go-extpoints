@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/progrium/go-extpoints/examples/tool/extpoints"
 	"github.com/progrium/go-extpoints/examples/tool/types"
@@ -30,9 +29,9 @@ func main() {
 		commands = append(commands, provider.Commands()...)
 	}
 
-	// make sure command is specified, disallow global args
+	// make sure command is specified
 	args := os.Args[1:]
-	if len(args) < 1 || strings.IndexRune(args[0], '-') == 0 {
+	if len(args) < 1 {
 		usage()
 	}
 

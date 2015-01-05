@@ -54,12 +54,12 @@ import (
 )
 
 func init() {
-	extpoints.Register(new(BuiltinParticipant))
+	extpoints.Register(new(Builtin))
 }
 
-type BuiltinParticipant struct {}
+type Builtin struct {}
 
-func (p *BuiltinParticipant) Main() {
+func (p *Builtin) Main() {
 	fmt.Println("Hello world!")
 }
 ```
