@@ -68,7 +68,7 @@ Now when we build and run the app, it does something! Certainly, the value of ex
 
 There are two fuller example applications in this repo to take a look at:
 
- * [tool](https://github.com/progrium/go-extpoints/tree/master/examples/tool) ([extpoint docs](http://godoc.org/github.com/progrium/go-extpoints/examples/tool/extpoints)), a command line tool with subcommands and lifecycle hooks as extension points
+ * [tool](https://github.com/progrium/go-extpoints/tree/master/examples/tool) ([extpoints](http://godoc.org/github.com/progrium/go-extpoints/examples/tool/extpoints)), a CLI tool with subcommands and lifecycle hooks as extension points
  * [daemon](https://github.com/progrium/go-extpoints/tree/master/examples/daemon), ... doesn't exist yet
 
 ## Extension Point Meta API
