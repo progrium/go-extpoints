@@ -107,37 +107,37 @@ func Register(component interface{}) []string {
 	return ifaces
 }
 
-// LifecycleContributor
+// LifecycleParticipant
 
-var LifecycleContributors = &lifecycleContributorExt{
-	newExtensionPoint(new(LifecycleContributor)),
+var LifecycleParticipants = &lifecycleParticipantExt{
+	newExtensionPoint(new(LifecycleParticipant)),
 }
 
-type lifecycleContributorExt struct {
+type lifecycleParticipantExt struct {
 	*extensionPoint
 }
 
-func (ep *lifecycleContributorExt) Unregister(name string) bool {
+func (ep *lifecycleParticipantExt) Unregister(name string) bool {
 	return ep.unregister(name)
 }
 
-func (ep *lifecycleContributorExt) Register(component LifecycleContributor) bool {
+func (ep *lifecycleParticipantExt) Register(component LifecycleParticipant) bool {
 	return ep.register(component)
 }
 
-func (ep *lifecycleContributorExt) RegisterNamed(component LifecycleContributor, name string) bool {
+func (ep *lifecycleParticipantExt) RegisterNamed(component LifecycleParticipant, name string) bool {
 	return ep.registerNamed(component, name)
 }
 
-func (ep *lifecycleContributorExt) Lookup(name string) (LifecycleContributor, bool) {
+func (ep *lifecycleParticipantExt) Lookup(name string) (LifecycleParticipant, bool) {
 	ext, ok := ep.lookup(name)
-	return ext.(LifecycleContributor), ok
+	return ext.(LifecycleParticipant), ok
 }
 
-func (ep *lifecycleContributorExt) All() map[string]LifecycleContributor {
-	all := make(map[string]LifecycleContributor)
+func (ep *lifecycleParticipantExt) All() map[string]LifecycleParticipant {
+	all := make(map[string]LifecycleParticipant)
 	for k, v := range ep.all() {
-		all[k] = v.(LifecycleContributor)
+		all[k] = v.(LifecycleParticipant)
 	}
 	return all
 }

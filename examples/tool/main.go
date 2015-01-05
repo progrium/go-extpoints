@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	lifecycleContributors = extpoints.LifecycleContributors
-	commandProviders      = extpoints.CommandProviders
+	lifecycleParticipant = extpoints.LifecycleParticipants
+	commandProviders     = extpoints.CommandProviders
 
 	commands []*types.Command
 )
@@ -43,14 +43,14 @@ func main() {
 			if err := cmd.Flag.Parse(args[1:]); err != nil {
 				os.Exit(2)
 			}
-			for _, contributor := range lifecycleContributors.All() {
-				if err := contributor.CommandStarts(cmd.Name()); err != nil {
+			for _, participant := range lifecycleParticipant.All() {
+				if err := participant.CommandStart(cmd.Name()); err != nil {
 					os.Exit(3)
 				}
 			}
 			cmd.Run(cmd, cmd.Flag.Args())
-			for _, contributor := range lifecycleContributors.All() {
-				contributor.CommandFinished(cmd.Name())
+			for _, participant := range lifecycleParticipant.All() {
+				participant.CommandFinish(cmd.Name())
 			}
 			return
 		}

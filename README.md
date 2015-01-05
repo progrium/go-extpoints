@@ -10,30 +10,51 @@ It expands on the foundation of Go interfaces and provides a meta-API for access
 
 ## Quick Example
 
-Here is a simple Go application that lets components hook into its `main()` by implementing an extension point interface called `ProgramParticipant`. Here is our `main.go` that we'll say lives under `$GOPATH/src/github.com/quick/example`:
+Here is a simple Go application that lets components hook into `main()` as subcommands by implementing an extension point interface called `Subcommand`. Here is our `main.go` that we'll say lives under `$GOPATH/src/github.com/quick/example`:
 
 ```
 //go:generate go-extpoints
 package main
 
 import (
+	"os"
+	"fmt"
 	"github.com/quick/example/extpoints"
 )
 
-func main() {
-	for _, participant := range extpoints.ProgramParticipants.All() {
-		participant.Main()
+var (
+	subcommands = extpoints.Subcommands
+)
+
+func usage() {
+	fmt.Println("Available commands:\n")
+	for name, _ := range subcommands.All() {
+		fmt.Println(" - ", name)
 	}
+}
+
+func main() {
+	if len(os.Args) < 2 {
+		usage()
+		os.Exit(2)
+	}
+	cmdName := os.Args[1]
+	cmd, exists := subcommands.Lookup(cmdName)
+	if !exists {
+		usage()
+		os.Exit(2)
+	}
+	cmd.Run(os.Args[2:])
 }
 ```
 
-We need to create an `extpoints` subpackage with a Go file in it to define our extension point interface. This is `extpoints/interfaces.go`:
+We need to create an `extpoints` subpackage with a Go file in it to define our extension point interface for subcommands. This is `extpoints/interfaces.go`:
 
 ```
 package extpoints
 
-type ProgramParticipant interface {
-	Main()
+type Subcommand interface {
+	Run(args []string)
 }
 ```
 
@@ -43,7 +64,7 @@ Now the `go-extpoints` tool comes in. It hooks into `go generate` to produce ext
 	 ....
 	$ go install
 
-Okay, but it doesn't *do* anything! Let's make a builtin component that implements `ProgramParticipant`. Add a `builtin.go` file:
+Okay, but it doesn't *do* anything! Let's make a builtin command component that implements `Subcommand`. Add a `hello.go` file:
 
 ```
 package main
@@ -54,21 +75,21 @@ import (
 )
 
 func init() {
-	extpoints.Register(new(Builtin))
+	extpoints.RegisterNamed(new(HelloComponent), "hello")
 }
 
-type Builtin struct {}
+type HelloComponent struct {}
 
-func (p *Builtin) Main() {
+func (p *HelloCmd) Run(args []string) {
 	fmt.Println("Hello world!")
 }
 ```
 
-Now when we build and run the app, it does something! Certainly, the value of extension points becomes clearer with larger applications. But just consider now that the component defined in `builtin.go` *could* exist in another package in another repo, and you'd just have to import it and rebuild to let it hook into our application.
+Now when we build and run the app, it shows `hello` as a subcommand. Certainly, the value of extension points becomes clearer with larger applications and more interesting interfaces. But just consider now that the component defined in `hello.go` *could* exist in another package in another repo. You'd just have to import it and rebuild to let it hook into our application.
 
 There are two fuller example applications in this repo to take a look at:
 
- * [tool](https://github.com/progrium/go-extpoints/tree/master/examples/tool) ([extpoints](http://godoc.org/github.com/progrium/go-extpoints/examples/tool/extpoints)), a CLI tool with subcommands and lifecycle hooks as extension points
+ * [tool](https://github.com/progrium/go-extpoints/tree/master/examples/tool) ([extpoints](http://godoc.org/github.com/progrium/go-extpoints/examples/tool/extpoints)), a more realistic CLI tool with subcommands and lifecycle hooks
  * [daemon](https://github.com/progrium/go-extpoints/tree/master/examples/daemon), ... doesn't exist yet
 
 ## Extension Point Meta API
