@@ -13,8 +13,7 @@ import (
 )
 
 func init() {
-	//cmdHelp.Run = runHelp // break init loop
-	commandProviders.Register(new(helpComponent))
+	commandProviders.Register(new(helpComponent), "")
 }
 
 type helpComponent struct{}

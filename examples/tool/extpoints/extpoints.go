@@ -40,20 +40,19 @@ func (ep *extensionPoint) lookup(name string) (ext interface{}, ok bool) {
 func (ep *extensionPoint) all() map[string]interface{} {
 	ep.Lock()
 	defer ep.Unlock()
-	registered := make(map[string]interface{})
+	all := make(map[string]interface{})
 	for k, v := range ep.components {
-		registered[k] = v
+		all[k] = v
 	}
-	return registered
+	return all
 }
 
-func (ep *extensionPoint) register(component interface{}) bool {
-	return ep.registerNamed(component, reflect.TypeOf(component).Elem().Name())
-}
-
-func (ep *extensionPoint) registerNamed(component interface{}, name string) bool {
+func (ep *extensionPoint) register(component interface{}, name string) bool {
 	ep.Lock()
 	defer ep.Unlock()
+	if name == "" {
+		name = reflect.TypeOf(component).Elem().Name()
+	}
 	_, exists := ep.components[name]
 	if exists {
 		return false
@@ -83,24 +82,24 @@ func implements(component interface{}) []string {
 	return ifaces
 }
 
-func RegisterNamed(component interface{}, name string) []string {
+func Register(component interface{}, name string) []string {
 	registry.Lock()
 	defer registry.Unlock()
 	var ifaces []string
 	for _, iface := range implements(component) {
-		if ok := registry.extpoints[iface].registerNamed(component, name); ok {
+		if ok := registry.extpoints[iface].register(component, name); ok {
 			ifaces = append(ifaces, iface)
 		}
 	}
 	return ifaces
 }
 
-func Register(component interface{}) []string {
+func Unregister(name string) []string {
 	registry.Lock()
 	defer registry.Unlock()
 	var ifaces []string
-	for _, iface := range implements(component) {
-		if ok := registry.extpoints[iface].register(component); ok {
+	for iface, extpoint := range registry.extpoints {
+		if ok := extpoint.unregister(name); ok {
 			ifaces = append(ifaces, iface)
 		}
 	}
@@ -121,12 +120,8 @@ func (ep *lifecycleParticipantExt) Unregister(name string) bool {
 	return ep.unregister(name)
 }
 
-func (ep *lifecycleParticipantExt) Register(component LifecycleParticipant) bool {
-	return ep.register(component)
-}
-
-func (ep *lifecycleParticipantExt) RegisterNamed(component LifecycleParticipant, name string) bool {
-	return ep.registerNamed(component, name)
+func (ep *lifecycleParticipantExt) Register(component LifecycleParticipant, name string) bool {
+	return ep.register(component, name)
 }
 
 func (ep *lifecycleParticipantExt) Lookup(name string) (LifecycleParticipant, bool) {
@@ -156,12 +151,8 @@ func (ep *commandProviderExt) Unregister(name string) bool {
 	return ep.unregister(name)
 }
 
-func (ep *commandProviderExt) Register(component CommandProvider) bool {
-	return ep.register(component)
-}
-
-func (ep *commandProviderExt) RegisterNamed(component CommandProvider, name string) bool {
-	return ep.registerNamed(component, name)
+func (ep *commandProviderExt) Register(component CommandProvider, name string) bool {
+	return ep.register(component, name)
 }
 
 func (ep *commandProviderExt) Lookup(name string) (CommandProvider, bool) {

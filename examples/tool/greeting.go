@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	commandProviders.Register(new(greetingComponent))
+	commandProviders.Register(new(greetingComponent), "")
 }
 
 type greetingComponent struct{}

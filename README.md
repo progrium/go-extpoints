@@ -107,7 +107,7 @@ type <ExtensionPoint> interface {
 
 Your `extpoints` subpackage will also have top-level registration functions generated that will run components through all known extension points, registering or unregistering with any that are based on an interface the component implements. They return the names of the interfaces they were registered/unregistered with.
 
-```go
+```
 func Register(component interface{}, name string) []string
 func Unregister(name string) []string
 ```

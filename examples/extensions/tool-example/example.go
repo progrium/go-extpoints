@@ -3,12 +3,12 @@ package example
 import (
 	"fmt"
 
-	"github.com/progrium/go-extpoints/_examples/tool/extpoints"
-	"github.com/progrium/go-extpoints/_examples/tool/types"
+	"github.com/progrium/go-extpoints/examples/tool/extpoints"
+	"github.com/progrium/go-extpoints/examples/tool/types"
 )
 
 func init() {
-	extpoints.Register(new(exampleExtension))
+	extpoints.Register(new(exampleExtension), "")
 }
 
 type exampleExtension struct{}
@@ -17,11 +17,11 @@ func (h *exampleExtension) Commands() []*types.Command {
 	return []*types.Command{cmdExample}
 }
 
-func (h *exampleExtension) CommandStarts(commandName string) error {
+func (h *exampleExtension) CommandStart(commandName string) error {
 	return nil
 }
 
-func (h *exampleExtension) CommandFinished(commandName string) {
+func (h *exampleExtension) CommandFinish(commandName string) {
 	if commandName == "hello" {
 		fmt.Println("Example extension says hello, too!")
 	}
