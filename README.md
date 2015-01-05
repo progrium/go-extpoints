@@ -76,19 +76,19 @@ There are two fuller example applications in this repo to take a look at:
 All interfaces defined in your `extpoints` subpackage will be turned into extension point singleton object variables, using the pluralized name of the interface. These extension point objects implement this simple meta-API:
 
 ```
-	type ExtensionPoint interface {
-		Register(component <Interface>) bool
-		RegisterNamed(component <Interface>, name string) bool
-		Lookup(name string) (<Interface>, bool)
-		All() map[string]<Interface>
-	}
+type ExtensionPoint interface {
+	Register(component <Interface>) bool
+	RegisterNamed(component <Interface>, name string) bool
+	Lookup(name string) (<Interface>, bool)
+	All() map[string]<Interface>
+}
 ```
 
-The `extpoints` subpackage will also have top-level registration functions that will run components through all known extension points, registering with any that are based on an interface the component implements. They return the names of the interfaces they were registered against.
+Your `extpoints` subpackage will also have top-level registration functions generated that will run components through all known extension points, registering with any that are based on an interface the component implements. They return the names of the interfaces they were registered against.
 
 ```
-	func Register(component interface{}) []string
-	func RegisterNamed(component interface{}, name string) []string
+func Register(component interface{}) []string
+func RegisterNamed(component interface{}, name string) []string
 ```
 
 ## Why a subpackage?
@@ -97,23 +97,48 @@ There are number of reasons this turned out to be a very elegant solution.
 
 First, since we force the convention of a subpackage called `extpoints`, it makes it very easy to identify a package as having extension points from looking at the project tree. You then know where to look to find the interfaces that are exposed as extension points.
 
-Second, it makes it clearer in your code when you're using extension points. You have to explicitly import the package, then call `extpoints.<ExtensionPoint>` when using them. This helps identify where extension points actually hook into your program.
+Second, third-party packages have a well known package to import for registering. Whether you have extension points for a library package or a command with just a `main` package, there's always a definite `extpoints` package there to import.
 
-Third, third-party packages have a well known package to import for registering. Whether you have extension points for a library package or a command with just a `main` package, there's always a definite `extpoints` package there to import.
+It also makes it clearer in your code when you're using extension points. You have to explicitly import the package, then call `extpoints.<ExtensionPoint>` when using them. This helps identify where extension points actually hook into your program.
 
 Lastly, it produces its own GoDoc page. Extension points are designed to use existing documentation infrastructure. But in such a way that gives them their own namespace. Your extension point APIs are different than regular APIs. They're not APIs to call, but APIs to implement, specifically to extend your package. They're the "back office" APIs of your package.
 
 ## Usage Patterns
 
-There are a number of API design patterns for extension point interfaces, however that's a deep subject. Instead, here are "mechanical" patterns of different ways to use the extension point meta-API:
+Here are different example ways to use extension points to interact with components:
 
 #### Simple Iteration
+```
+for _, listener := range extpoints.EventListeners.All() {
+	listener.Notify(&MyEvent{})
+}
+```
 
 #### Lookup Only One
+```
+driver, registered := extpoints.StorageDrivers.Lookup(config.Get("storage-driver"))
+if !registered {
+	log.Fatalf("storage driver '%s' not installed", config.Get("storage-driver"))
+}
+driver.StoreObject(object)
+```
 
 #### Passing References
+```
+for _, filter := range extpoints.RequestFilters.All() {
+	filter.FilterRequest(req)
+}
+```
 
 #### Match and Use
+```
+for _, handler := range extpoints.RequestHandlers.All() {
+	if handler.MatchRequest(req) {
+		handler.HandleRequest(req)
+		break
+	}
+}
+```
 
 ## Laying the Groundwork
 
