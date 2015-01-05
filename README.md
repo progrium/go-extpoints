@@ -22,9 +22,7 @@ import (
 	"github.com/quick/example/extpoints"
 )
 
-var (
-	subcommands = extpoints.Subcommands
-)
+var subcommands = extpoints.Subcommands
 
 func usage() {
 	fmt.Println("Available commands:\n")
@@ -78,7 +76,7 @@ func init() {
 
 type HelloComponent struct {}
 
-func (p *HelloCmd) Run(args []string) {
+func (p *HelloComponent) Run(args []string) {
 	fmt.Println("Hello world!")
 }
 ```
