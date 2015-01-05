@@ -92,21 +92,24 @@ There are two fuller example applications in this repo to take a look at:
 
 All interfaces defined in your `extpoints` subpackage will be turned into extension point singleton object variables, using the pluralized name of the interface. These extension point objects implement this simple meta-API:
 
-```
-type ExtensionPoint interface {
-	Register(component <Interface>) bool
-	RegisterNamed(component <Interface>, name string) bool
+```go
+type <ExtensionPoint> interface {
+	// if name is "", the component type is used
+	Register(component <Interface>, name string) bool
+	
 	Unregister(name string) bool
+
 	Lookup(name string) (<Interface>, bool)
-	All() map[string]<Interface>
+
+	All() map[string]<Interface> // keyed by name
 }
 ```
 
-Your `extpoints` subpackage will also have top-level registration functions generated that will run components through all known extension points, registering with any that are based on an interface the component implements. They return the names of the interfaces they were registered against.
+Your `extpoints` subpackage will also have top-level registration functions generated that will run components through all known extension points, registering or unregistering with any that are based on an interface the component implements. They return the names of the interfaces they were registered/unregistered with.
 
-```
-func Register(component interface{}) []string
-func RegisterNamed(component interface{}, name string) []string
+```go
+func Register(component interface{}, name string) []string
+func Unregister(name string) []string
 ```
 
 ## Making it easy to install extensions
@@ -177,7 +180,7 @@ for _, handler := range extpoints.RequestHandlers.All() {
 
 Although this only seems to allow for compile-time extensibility, this is already quite a win. It means power users can build and compile in their own extensions that live outside your repository. 
 
-However, it also lays the groundwork for other dynamic extensions. I've used this model to wrap extension points to implement components in embedded scripting languages, as hook scripts, or as remote plugin daemons via RPC. 
+However, it also lays the groundwork for other dynamic extensions. I've used this model to wrap extension points for components in embedded scripting languages, as hook scripts, as remote plugin daemons via RPC, or all of the above implemented as components themselves! 
 
 No matter how you're thinking about dynamic extensions later on, using `go-extpoints` gives you a lot of options. Once Go supports dynamic libraries? This will work perfectly with that too.
 
