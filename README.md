@@ -12,7 +12,7 @@ It expands on the foundation of Go interfaces and provides a meta-API for access
 
 Here is a simple Go application that lets components hook into `main()` as subcommands by implementing an extension point interface called `Subcommand`. Here is our `main.go` that we'll say lives under `$GOPATH/src/github.com/quick/example`:
 
-```
+```golang
 //go:generate go-extpoints
 package main
 
@@ -48,7 +48,7 @@ func main() {
 
 We need to create an `extpoints` subpackage with a Go file in it to define our extension point interface for subcommands. This is `extpoints/interfaces.go`:
 
-```
+```golang
 package extpoints
 
 type Subcommand interface {
@@ -64,7 +64,7 @@ Now the `go-extpoints` tool comes in. It hooks into `go generate` to produce ext
 
 Okay, but it doesn't *do* anything! Let's make a builtin command component that implements `Subcommand`. Add a `hello.go` file:
 
-```
+```golang
 package main
 
 import (
@@ -115,7 +115,7 @@ func RegisterNamed(component interface{}, name string) []string
 
 Assuming you tell third-party developers to call your `extpoints.Register` in their `init()`, you can activate them with a side-effect import (using a blank import name). Make this easy for users to enable/disable via comments, or add their own without worrying about messing with your code by having a separate `extensions.go` or `plugins.go` file with just these imports:
 
-```
+```golang
 package yourpackage
 
 import (
@@ -142,14 +142,14 @@ Lastly, it produces its own GoDoc page. Extension points are designed to use exi
 Here are different example ways to use extension points to interact with components:
 
 #### Simple Iteration
-```
+```golang
 for _, listener := range extpoints.EventListeners.All() {
 	listener.Notify(&MyEvent{})
 }
 ```
 
 #### Lookup Only One
-```
+```golang
 driverName := config.Get("storage-driver")
 driver, registered := extpoints.StorageDrivers.Lookup(driverName)
 if !registered {
@@ -159,14 +159,14 @@ driver.StoreObject(object)
 ```
 
 #### Passing by Reference
-```
+```golang
 for _, filter := range extpoints.RequestFilters.All() {
 	filter.FilterRequest(req)
 }
 ```
 
 #### Match and Use
-```
+```golang
 for _, handler := range extpoints.RequestHandlers.All() {
 	if handler.MatchRequest(req) {
 		handler.HandleRequest(req)
