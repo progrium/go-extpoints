@@ -104,28 +104,28 @@ func Register(extension interface{}) []string {
 
 // LifecycleContributor
 
-var LifecycleContributors = &LifecycleContributorExt{
+var LifecycleContributors = &lifecycleContributorExt{
 	newExtensionPoint(new(LifecycleContributor)),
 }
 
-type LifecycleContributorExt struct {
+type lifecycleContributorExt struct {
 	*extensionPoint
 }
 
-func (ep *LifecycleContributorExt) Register(extension LifecycleContributor) bool {
+func (ep *lifecycleContributorExt) Register(extension LifecycleContributor) bool {
 	return ep.register(extension)
 }
 
-func (ep *LifecycleContributorExt) RegisterNamed(extension LifecycleContributor, name string) bool {
+func (ep *lifecycleContributorExt) RegisterNamed(extension LifecycleContributor, name string) bool {
 	return ep.registerNamed(extension, name)
 }
 
-func (ep *LifecycleContributorExt) Lookup(name string) (LifecycleContributor, bool) {
+func (ep *lifecycleContributorExt) Lookup(name string) (LifecycleContributor, bool) {
 	ext, ok := ep.lookup(name)
 	return ext.(LifecycleContributor), ok
 }
 
-func (ep *LifecycleContributorExt) All() map[string]LifecycleContributor {
+func (ep *lifecycleContributorExt) All() map[string]LifecycleContributor {
 	all := make(map[string]LifecycleContributor)
 	for k, v := range ep.all() {
 		all[k] = v.(LifecycleContributor)
@@ -135,28 +135,28 @@ func (ep *LifecycleContributorExt) All() map[string]LifecycleContributor {
 
 // CommandProvider
 
-var CommandProviders = &CommandProviderExt{
+var CommandProviders = &commandProviderExt{
 	newExtensionPoint(new(CommandProvider)),
 }
 
-type CommandProviderExt struct {
+type commandProviderExt struct {
 	*extensionPoint
 }
 
-func (ep *CommandProviderExt) Register(extension CommandProvider) bool {
+func (ep *commandProviderExt) Register(extension CommandProvider) bool {
 	return ep.register(extension)
 }
 
-func (ep *CommandProviderExt) RegisterNamed(extension CommandProvider, name string) bool {
+func (ep *commandProviderExt) RegisterNamed(extension CommandProvider, name string) bool {
 	return ep.registerNamed(extension, name)
 }
 
-func (ep *CommandProviderExt) Lookup(name string) (CommandProvider, bool) {
+func (ep *commandProviderExt) Lookup(name string) (CommandProvider, bool) {
 	ext, ok := ep.lookup(name)
 	return ext.(CommandProvider), ok
 }
 
-func (ep *CommandProviderExt) All() map[string]CommandProvider {
+func (ep *commandProviderExt) All() map[string]CommandProvider {
 	all := make(map[string]CommandProvider)
 	for k, v := range ep.all() {
 		all[k] = v.(CommandProvider)

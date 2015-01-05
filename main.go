@@ -75,7 +75,7 @@ func (i *extensionPoint) Var() string {
 }
 
 func (i *extensionPoint) Type() string {
-	return i.Name + "Ext"
+	return strings.ToLower(i.Name[0:1]) + i.Name[1:] + "Ext"
 }
 
 func extensionPoints(ifaces []string) []extensionPoint {
