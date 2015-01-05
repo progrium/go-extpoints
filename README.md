@@ -93,7 +93,7 @@ func RegisterNamed(component interface{}, name string) []string
 
 ## Making it easy to install extensions
 
-Assuming you tell third-party developers to call your `extpoints.Register` in their package's `init()`, you're able activate them with a side-effect import (using a blank import name). Make this easy for users to enable/disable via comments, or add their own without worrying about messing with your code by having a separate `extensions.go` or `plugins.go` file with just these imports:
+Assuming you tell third-party developers to call your `extpoints.Register` in their `init()`, you can activate them with a side-effect import (using a blank import name). Make this easy for users to enable/disable via comments, or add their own without worrying about messing with your code by having a separate `extensions.go` or `plugins.go` file with just these imports:
 
 ```
 package yourpackage
@@ -105,7 +105,7 @@ import (
 
 ```
 
-## Why a subpackage?
+## Why the `extpoints` subpackage?
 
 There are number of reasons this turned out to be a very elegant solution. 
 
@@ -115,7 +115,7 @@ Second, third-party packages have a well known package to import for registering
 
 It also makes it clearer in your code when you're using extension points. You have to explicitly import the package, then call `extpoints.<ExtensionPoint>` when using them. This helps identify where extension points actually hook into your program.
 
-Lastly, it produces its own GoDoc page. Extension points are designed to use existing documentation infrastructure. But in such a way that gives them their own namespace. Your extension point APIs are different than regular APIs. They're not APIs to call, but APIs to implement, specifically to extend your package. They're the "back office" APIs of your package.
+Lastly, it produces its own GoDoc page. Extension points are designed to use existing Go documentation infrastructure. But in such a way that gives them their own namespace. Your extension point APIs are different than regular APIs. They're not APIs to call, but APIs to implement, specifically to extend your package. They're the "back office" APIs of your package.
 
 ## Usage Patterns
 
@@ -165,7 +165,7 @@ No matter how you're thinking about dynamic extensions later on, using `go-extpo
 
 ## Inspiration
 
-This project and the model that it supports is a Go idiomatic port of the [component architecture](http://trac.edgewall.org/wiki/TracDev/ComponentArchitecture) used in Trac, which is written in Python. It's taken about a year to get this right in Go.
+This project and the model that it supports is a lightweight, Go idiomatic port of the [component architecture](http://trac.edgewall.org/wiki/TracDev/ComponentArchitecture) used in Trac, which is written in Python. It's taken about a year to get this right in Go.
 
 ## License
 
