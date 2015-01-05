@@ -71,7 +71,7 @@ import (
 )
 
 func init() {
-	extpoints.RegisterNamed(new(HelloComponent), "hello")
+	extpoints.Register(new(HelloComponent), "hello")
 }
 
 type HelloComponent struct {}
