@@ -128,7 +128,7 @@ func (ep *{{.Type}}) Register(component {{.Name}}, name string) bool {
 
 func (ep *{{.Type}}) Lookup(name string) ({{.Name}}, bool) {
 	ext, ok := ep.lookup(name)
-	if ext == nil {
+	if !ok {
 		return nil, ok
 	}
 	return ext.({{.Name}}), ok
