@@ -1,8 +1,4 @@
-package testextpoints
-
-type Dummy interface {
-	Do()
-}
+package main
 
 func init() {
 	dummies.Register(new(dummyA), "")
