@@ -115,6 +115,13 @@ func main() {
 
 	var packageName string
 	var ifaces, ifacesAll []string
+	ifacesAllowed := make(map[string]struct{})
+
+	if len(os.Args) > 2 {
+		for _, iface := range os.Args[2:] {
+			ifacesAllowed[iface] = struct{}{}
+		}
+	}
 
 	files, _ := ioutil.ReadDir(packagePath)
 	for _, file := range files {
@@ -122,6 +129,16 @@ func main() {
 			path := filepath.Join(packagePath, file.Name())
 			log.Printf("Processing file %s", path)
 			packageName, ifaces = processFile(path)
+			if len(ifacesAllowed) > 0 {
+				var ifacesFiltered []string
+				for _, iface := range ifaces {
+					_, allowed := ifacesAllowed[iface]
+					if allowed {
+						ifacesFiltered = append(ifacesFiltered, iface)
+					}
+				}
+				ifaces = ifacesFiltered
+			}
 			log.Printf("Found interfaces: %#v", ifaces)
 			ifacesAll = append(ifacesAll, ifaces...)
 		}

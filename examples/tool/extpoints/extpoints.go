@@ -126,6 +126,9 @@ func (ep *lifecycleParticipantExt) Register(component LifecycleParticipant, name
 
 func (ep *lifecycleParticipantExt) Lookup(name string) (LifecycleParticipant, bool) {
 	ext, ok := ep.lookup(name)
+	if !ok {
+		return nil, ok
+	}
 	return ext.(LifecycleParticipant), ok
 }
 
@@ -157,6 +160,9 @@ func (ep *commandProviderExt) Register(component CommandProvider, name string) b
 
 func (ep *commandProviderExt) Lookup(name string) (CommandProvider, bool) {
 	ext, ok := ep.lookup(name)
+	if !ok {
+		return nil, ok
+	}
 	return ext.(CommandProvider), ok
 }
 
