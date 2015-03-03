@@ -32,6 +32,10 @@ func processFile(inputPath string) (string, []string) {
 			ifaces = append(ifaces, typeName)
 			continue
 		}
+		if typeName, ok := identifyFuncType(decl); ok {
+			ifaces = append(ifaces, typeName)
+			continue
+		}
 	}
 
 	return packageName, ifaces
@@ -42,6 +46,28 @@ func identifyPackage(f *ast.File) string {
 		return ""
 	}
 	return f.Name.Name
+}
+
+func identifyFuncType(decl ast.Decl) (typeName string, match bool) {
+	genDecl, ok := decl.(*ast.GenDecl)
+	if !ok {
+		return
+	}
+	for _, spec := range genDecl.Specs {
+		if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+			if _, ok := typeSpec.Type.(*ast.FuncType); ok {
+				if typeSpec.Name != nil {
+					typeName = typeSpec.Name.Name
+					break
+				}
+			}
+		}
+	}
+	if typeName == "" {
+		return
+	}
+	match = true
+	return
 }
 
 func identifyInterface(decl ast.Decl) (typeName string, match bool) {

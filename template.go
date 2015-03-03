@@ -6,6 +6,8 @@ package {{.Package}}
 import (
 	"reflect"
 	"sync"
+	"strings"
+	"runtime"
 )
 
 var registry = struct {
@@ -53,7 +55,14 @@ func (ep *extensionPoint) register(component interface{}, name string) bool {
 	ep.Lock()
 	defer ep.Unlock()
 	if name == "" {
-		name = reflect.TypeOf(component).Elem().Name()
+		comType := reflect.TypeOf(component)
+		if comType.Kind() == reflect.Func {
+			nameParts := strings.Split(runtime.FuncForPC(
+				reflect.ValueOf(component).Pointer()).Name(), ".")
+			name = nameParts[len(nameParts)-1]
+		} else {
+			name = comType.Elem().Name()
+		}
 	}
 	_, exists := ep.components[name]
 	if exists {
@@ -76,8 +85,12 @@ func (ep *extensionPoint) unregister(name string) bool {
 
 func implements(component interface{}) []string {
 	var ifaces []string
+	typ := reflect.TypeOf(component)
 	for name, ep := range registry.extpoints {
-		if reflect.TypeOf(component).Implements(ep.iface) {
+		if ep.iface.Kind() == reflect.Func && typ.AssignableTo(ep.iface) {
+			ifaces = append(ifaces, name)
+		}
+		if ep.iface.Kind() != reflect.Func && typ.Implements(ep.iface) {
 			ifaces = append(ifaces, name)
 		}
 	}

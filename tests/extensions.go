@@ -1,10 +1,28 @@
 package main
 
+import (
+	"strings"
+
+	"github.com/progrium/go-extpoints/tests/extpoints"
+)
+
 func init() {
-	dummies.Register(new(dummyA), "")
+	extpoints.Register(new(noop), "")                      // Noop
+	extpoints.Register(new(uppercaseTransformer), "upper") // StringTransformer
+	extpoints.NoopFactories.Register(noopFactory, "")
 }
 
-type dummyA struct{}
+func noopFactory() extpoints.Noop {
+	return new(noop)
+}
 
-func (da *dummyA) Do() {
+type noop struct{}
+
+func (n *noop) Noop() {
+}
+
+type uppercaseTransformer struct{}
+
+func (t *uppercaseTransformer) Transform(input string) string {
+	return strings.ToUpper(input)
 }
