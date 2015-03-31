@@ -1,8 +1,71 @@
 # go-extpoints
 
-This package, named short for "Go extension points", provides a simple component model for making your Go packages, libraries, and applications extensible in a standard way. 
+This Go generator, named short for "extension points", provides a generic [inversion of control](http://en.wikipedia.org/wiki/Inversion_of_control) model for making extensible Go packages, libraries, and applications. It produces package extension point singletons from extension types you define. Extension points are then used to both register extensions and use registered extensions.
 
-It expands on the foundation of Go interfaces and provides a meta-API for accessing and registering "components", objects that implement one or more "extension point" interfaces. It not only lets third-party packages hook in as build-time extensions, but also encourages better organization of your own packages. 
+#### Extension Types
+
+These define your hooks. They can be Go interfaces or simple function signature types. Here are some generic examples:
+
+```go
+type ConfigStore interface {
+	Get(key string) (string, error)
+	Set(key, value string) error
+	Del(key string) error
+}
+
+type AuthProvider interface {
+	Authenticate(user, pass string) bool
+}
+
+type EventListener interface {
+	Notify(event Event)
+}
+
+type HttpEndpoint func() http.Handler
+
+type RequestModifier func(request *http.Request)
+
+```
+
+#### Extension Points
+
+With types defined, go-extpoint generates package singletons for each type. You can then
+use extensions in a number of ways:
+
+```go
+// Lookup a single registered extension for drivers
+config, registered := ConfigStores.Lookup(configStore)
+if !registered {
+	log.Fatalf("config store '%s' not registered", configStore)
+}
+config.Set("foo", "bar")
+
+// Iterate until you get what you need
+func authenticate(user, pass string) bool {
+	for _, provider := range AuthProviders.All() {
+		if provide.Authenticate(user, pass) {
+			return true
+		}
+	}
+	return false
+}
+
+// Fire and forget events to all extensions
+for _, listener := range EventListeners.All() {
+	listener.Notify(event)
+}
+
+// Use name and return value of all extensions for registration
+for name, handler := range HttpEndpoints.All() {
+	http.Handle("/"+name, handler())
+}
+
+// Pass by reference to all extensions for middleware
+for _, modifier := range RequestModifiers.All() {
+	modifier(req)
+}
+
+```
 
 ## Getting the tool
 
@@ -10,7 +73,7 @@ It expands on the foundation of Go interfaces and provides a meta-API for access
 
 ## Quick Example
 
-Here is a simple Go application that lets components hook into `main()` as subcommands simply by implementing an interface we'll make called `Subcommand`. This interface will have just one method `Run()`, but you can make extension points based on any interface.
+Here is a full Go application that lets components hook into `main()` as subcommands simply by implementing an interface we'll make called `Subcommand`. This interface will have just one method `Run()`, but you can make extension points based on any interface.
 
 Assuming our package lives under `$GOPATH/src/github.com/quick/example`, here is our `main.go`:
 
@@ -21,7 +84,7 @@ package main
 import (
 	"fmt"
 	"os"
-	
+
 	"github.com/quick/example/extpoints"
 )
 
@@ -46,9 +109,9 @@ func main() {
 	cmd.Run(os.Args[2:])
 }
 ```
-Two things to note. First, the `go:generate` directive at the top. This tells `go generate` it needs to run `go-extpoints`, which will happen in a moment. 
+Two things to note. First, the `go:generate` directive at the top. This tells `go generate` it needs to run `go-extpoints`, which will happen in a moment.
 
-Another thing to note, the extension point is accessed by a variable named by the plural of our interface `Subcommand` and lives under the `extpoints` subpackage. 
+Another thing to note, the extension point is accessed by a variable named by the plural of our interface `Subcommand` and in this case lives under a separate `extpoints` subpackage.
 
 We need to create that subpackage with a Go file in it to define our interface used for this extension point. This is our `extpoints/interfaces.go`:
 
@@ -103,13 +166,15 @@ All interfaces defined in your `extpoints` subpackage will be turned into extens
 ```go
 type <ExtensionPoint> interface {
 	// if name is "", the component type is used
-	Register(component <Interface>, name string) bool
-	
+	Register(ext <ExtensionType>, name string) bool
+
 	Unregister(name string) bool
 
-	Lookup(name string) (<Interface>, bool)
+	Lookup(name string) (<ExtensionType>, bool)
 
-	All() map[string]<Interface> // keyed by name
+	All() map[string]<ExtensionType> // keyed by name
+
+	Name() []string // just list of names
 }
 ```
 
@@ -122,7 +187,7 @@ func Unregister(name string) []string
 
 ## Making it easy to install extensions
 
-Assuming you tell third-party developers to call your `extpoints.Register` in their `init()`, you can link them with a side-effect import (using a blank import name). 
+Assuming you tell third-party developers to call your `extpoints.Register` in their `init()`, you can link them with a side-effect import (using a blank import name).
 
 You can make this easy for users to enable/disable via comments, or add their own without worrying about messing with your code by having a separate `extensions.go` or `plugins.go` file with just these imports:
 
@@ -136,7 +201,7 @@ import (
 
 ```
 
-Users can now just edit this file and `go build` or `go install`. 
+Users can now just edit this file and `go build` or `go install`.
 
 ## Usage Patterns
 
@@ -186,9 +251,9 @@ It also makes it clearer in your code when you're using extension points. You ha
 
 ## Groundwork for Dynamic Extensions
 
-Although this only seems to allow for compile-time extensibility, this itself is quite a win. It means power users can build and compile in their own extensions that live outside your repository. 
+Although this only seems to allow for compile-time extensibility, this itself is quite a win. It means power users can build and compile in their own extensions that live outside your repository.
 
-However, it also lays the groundwork for other dynamic extensions. I've used this model to wrap extension points for components in embedded scripting languages, as hook scripts, as remote plugin daemons via RPC, or all of the above implemented as components themselves! 
+However, it also lays the groundwork for other dynamic extensions. I've used this model to wrap extension points for components in embedded scripting languages, as hook scripts, as remote plugin daemons via RPC, or all of the above implemented as components themselves!
 
 No matter how you're thinking about dynamic extensions later on, using `go-extpoints` gives you a lot of options. Once Go supports dynamic libraries? This will work perfectly with that, too.
 

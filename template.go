@@ -155,4 +155,13 @@ func (ep *{{.Type}}) All() map[string]{{.Name}} {
 	return all
 }
 
+func (ep *{{.Type}}) Names() []string {
+	var names []string
+	for k := range ep.all() {
+		names = append(names, k)
+	}
+	return names
+}
+
+
 {{end}}`
