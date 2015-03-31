@@ -1,8 +1,10 @@
 # go-extpoints
 
-This Go generator, named short for "extension points", provides a generic [inversion of control](http://en.wikipedia.org/wiki/Inversion_of_control) model for making extensible Go packages, libraries, and applications. It produces package extension point singletons from extension types you define. Extension points are then used to both register extensions and use the registered extensions.
+This Go generator, named short for "extension points", provides a generic [inversion of control](http://en.wikipedia.org/wiki/Inversion_of_control) model for making extensible Go packages, libraries, and applications.
 
-[Logspout](https://github.com/gliderlabs/logspout) is a real application using go-extpoints. [Read about it here.](http://gliderlabs.com/blog/2015/03/31/new-logspout-extensible-docker-logging/)
+It generates package extension point singletons from extension types you define. Extension points are then used to both register extensions and use the registered extensions with a common [meta-API](#extension-point-meta-api).
+
+[Logspout](https://github.com/gliderlabs/logspout) is a real application built using go-extpoints. [Read about it here.](http://gliderlabs.com/blog/2015/03/31/new-logspout-extensible-docker-logging/)
 
 ## Getting the tool
 
