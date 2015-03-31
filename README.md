@@ -1,6 +1,14 @@
 # go-extpoints
 
-This Go generator, named short for "extension points", provides a generic [inversion of control](http://en.wikipedia.org/wiki/Inversion_of_control) model for making extensible Go packages, libraries, and applications. It produces package extension point singletons from extension types you define. Extension points are then used to both register extensions and use registered extensions.
+This Go generator, named short for "extension points", provides a generic [inversion of control](http://en.wikipedia.org/wiki/Inversion_of_control) model for making extensible Go packages, libraries, and applications. It produces package extension point singletons from extension types you define. Extension points are then used to both register extensions and use the registered extensions.
+
+[Logspout](https://github.com/gliderlabs/logspout) is a real application using go-extpoints. [Read about it here.](http://gliderlabs.com/blog/2015/03/31/new-logspout-extensible-docker-logging/)
+
+## Getting the tool
+
+	$ go install github.com/progrium/go-extpoints
+
+## Concepts
 
 #### Extension Types
 
@@ -29,8 +37,7 @@ type RequestModifier func(request *http.Request)
 
 #### Extension Points
 
-With types defined, go-extpoint generates package singletons for each type. You can then
-use extensions in a number of ways:
+With types defined, go-extpoints generates package singletons for each type. When your program starts, extensions are registered with extension points. Then you can then use registered extensions in a number of ways:
 
 ```go
 // Lookup a single registered extension for drivers
@@ -67,11 +74,33 @@ for _, modifier := range RequestModifiers.All() {
 
 ```
 
-## Getting the tool
+## Extension Point Meta API
 
-	$ go install github.com/progrium/go-extpoints
+All extension types passed to go-extpoints will be turned into extension point singletons, using the pluralized name of the extension type. These extension point objects implement this simple meta-API:
 
-## Quick Example
+```go
+type <ExtensionPoint> interface {
+	// if name is "", the specific extension type is used
+	Register(extension <ExtensionType>, name string) bool
+
+	Unregister(name string) bool
+
+	Lookup(name string) (<ExtensionType>, bool)
+
+	All() map[string]<ExtensionType> // keyed by name
+
+	Name() []string // list of names
+}
+```
+
+It also generates top-level registration functions that will run components through all known extension points, registering or unregistering with any that are based on an interface the component implements. They return the names of the interfaces they were registered/unregistered with.
+
+```
+func Register(extension interface{}, name string) []string
+func Unregister(name string) []string
+```
+
+## Example Application
 
 Here is a full Go application that lets components hook into `main()` as subcommands simply by implementing an interface we'll make called `Subcommand`. This interface will have just one method `Run()`, but you can make extension points based on any interface.
 
@@ -159,35 +188,11 @@ There are two more in-deptch example applications in this repo to take a look at
  * [tool](https://github.com/progrium/go-extpoints/tree/master/examples/tool) ([extpoints](http://godoc.org/github.com/progrium/go-extpoints/examples/tool/extpoints)), a more realistic CLI tool with subcommands and lifecycle hooks
  * [daemon](https://github.com/progrium/go-extpoints/tree/master/examples/daemon), ... doesn't exist yet
 
-## Extension Point Meta API
 
-All interfaces defined in your `extpoints` subpackage will be turned into extension point singleton object variables, using the pluralized name of the interface. These extension point objects implement this simple meta-API:
-
-```go
-type <ExtensionPoint> interface {
-	// if name is "", the component type is used
-	Register(ext <ExtensionType>, name string) bool
-
-	Unregister(name string) bool
-
-	Lookup(name string) (<ExtensionType>, bool)
-
-	All() map[string]<ExtensionType> // keyed by name
-
-	Name() []string // just list of names
-}
-```
-
-Your `extpoints` subpackage will also have top-level registration functions generated that will run components through all known extension points, registering or unregistering with any that are based on an interface the component implements. They return the names of the interfaces they were registered/unregistered with.
-
-```
-func Register(component interface{}, name string) []string
-func Unregister(name string) []string
-```
 
 ## Making it easy to install extensions
 
-Assuming you tell third-party developers to call your `extpoints.Register` in their `init()`, you can link them with a side-effect import (using a blank import name).
+Assuming you tell third-party developers to call your package or extension point `Register` in their `init()`, you can link them with a side-effect import (using a blank import name).
 
 You can make this easy for users to enable/disable via comments, or add their own without worrying about messing with your code by having a separate `extensions.go` or `plugins.go` file with just these imports:
 
@@ -243,7 +248,7 @@ for _, handler := range extpoints.RequestHandlers.All() {
 
 ## Why the `extpoints` subpackage?
 
-Since we force the convention of a subpackage called `extpoints`, it makes it very easy to identify a package as having extension points from looking at the project tree. You then know where to look to find the interfaces that are exposed as extension points.
+Since we encourage the convention of a subpackage called `extpoints`, it makes it very easy to identify a package as having extension points from looking at the project tree. You then know where to look to find the interfaces that are exposed as extension points.
 
 Third-party packages have a well known package to import for registering. Whether you have extension points for a library package or a command with just a `main` package, there's always a definite `extpoints` package there to import.
 
