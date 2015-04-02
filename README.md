@@ -91,7 +91,7 @@ type <ExtensionPoint> interface {
 
 	All() map[string]<ExtensionType> // keyed by name
 
-	Name() []string // list of names
+	Names() []string // list of names
 }
 ```
 
