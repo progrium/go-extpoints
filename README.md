@@ -92,21 +92,21 @@ type <ExtensionPoint> interface {
 	// returns nil if not registered
 	Lookup(name string) <ExtensionType>
 
-	// for sorted subsets. nil lookups are included
+	// for sorted subsets. each name is looked up in order, nil or not
 	Select(names []string) []<ExtensionType>
 
 	// all registered, keyed by name
 	All() map[string]<ExtensionType>
 
 	// convenient list of names
-	Names() []string // list of names
+	Names() []string
 
 }
 ```
 
 It also generates top-level registration functions that will run extensions through all known extension points, registering or unregistering with any that are based on an interface the extension implements. They return the names of the interfaces they were registered/unregistered with.
 
-```
+```go
 func Register(extension interface{}, name string) []string
 func Unregister(name string) []string
 ```
@@ -142,8 +142,8 @@ func main() {
 	if len(os.Args) < 2 {
 		usage()
 	}
-	cmd, exists := subcommands.Lookup(os.Args[1])
-	if !exists {
+	cmd := subcommands.Lookup(os.Args[1])
+	if cmd == nil {
 		usage()
 	}
 	cmd.Run(os.Args[2:])
@@ -233,8 +233,8 @@ for _, listener := range extpoints.EventListeners.All() {
 #### Lookup Only One
 ```go
 driverName := config.Get("storage-driver")
-driver, registered := extpoints.StorageDrivers.Lookup(driverName)
-if !registered {
+driver := extpoints.StorageDrivers.Lookup(driverName)
+if driver == nil {
 	log.Fatalf("storage driver '%s' not installed", driverName)
 }
 driver.StoreObject(object)
