@@ -10,12 +10,53 @@ import (
 	"sync"
 )
 
-var registry = &registryType{m: make(map[string]*extensionPoint)}
+var extRegistry = &registryType{m: make(map[string]*extensionPoint)}
 
 type registryType struct {
 	sync.Mutex
 	m map[string]*extensionPoint
 }
+
+// Top level registration
+
+func extensionTypes(extension interface{}) []string {
+	var ifaces []string
+	typ := reflect.TypeOf(extension)
+	for name, ep := range extRegistry.m {
+		if ep.iface.Kind() == reflect.Func && typ.AssignableTo(ep.iface) {
+			ifaces = append(ifaces, name)
+		}
+		if ep.iface.Kind() != reflect.Func && typ.Implements(ep.iface) {
+			ifaces = append(ifaces, name)
+		}
+	}
+	return ifaces
+}
+
+func RegisterExtension(extension interface{}, name string) []string {
+	extRegistry.Lock()
+	defer extRegistry.Unlock()
+	var ifaces []string
+	for _, iface := range extensionTypes(extension) {
+		if extRegistry.m[iface].register(extension, name) {
+			ifaces = append(ifaces, iface)
+		}
+	}
+	return ifaces
+}
+
+func UnregisterExtension(name string) []string {
+	extRegistry.Lock()
+	defer extRegistry.Unlock()
+	var ifaces []string
+	for iface, extpoint := range extRegistry.m {
+		if extpoint.unregister(name) {
+			ifaces = append(ifaces, iface)
+		}
+	}
+	return ifaces
+}
+
 
 // Base extension point
 
@@ -30,9 +71,9 @@ func newExtensionPoint(iface interface{}) *extensionPoint {
 		iface:      reflect.TypeOf(iface).Elem(),
 		extensions: make(map[string]interface{}),
 	}
-	registry.Lock()
-	registry.m[ep.iface.Name()] = ep
-	registry.Unlock()
+	extRegistry.Lock()
+	extRegistry.m[ep.iface.Name()] = ep
+	extRegistry.Unlock()
 	return ep
 }
 
@@ -86,46 +127,6 @@ func (ep *extensionPoint) unregister(name string) bool {
 	}
 	delete(ep.extensions, name)
 	return true
-}
-
-// Top level registration
-
-func extensionTypes(extension interface{}) []string {
-	var ifaces []string
-	typ := reflect.TypeOf(extension)
-	for name, ep := range registry.m {
-		if ep.iface.Kind() == reflect.Func && typ.AssignableTo(ep.iface) {
-			ifaces = append(ifaces, name)
-		}
-		if ep.iface.Kind() != reflect.Func && typ.Implements(ep.iface) {
-			ifaces = append(ifaces, name)
-		}
-	}
-	return ifaces
-}
-
-func Register(extension interface{}, name string) []string {
-	registry.Lock()
-	defer registry.Unlock()
-	var ifaces []string
-	for _, iface := range extensionTypes(extension) {
-		if registry.m[iface].register(extension, name) {
-			ifaces = append(ifaces, iface)
-		}
-	}
-	return ifaces
-}
-
-func Unregister(name string) []string {
-	registry.Lock()
-	defer registry.Unlock()
-	var ifaces []string
-	for iface, extpoint := range registry.m {
-		if extpoint.unregister(name) {
-			ifaces = append(ifaces, iface)
-		}
-	}
-	return ifaces
 }
 
 {{range .ExtensionPoints}}// {{.Name}}

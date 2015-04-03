@@ -7,9 +7,9 @@ import (
 )
 
 func init() {
-	extpoints.Register(new(noop), "noop")                  // Noop
-	extpoints.Register(new(noop2), "noop2")                // Noop
-	extpoints.Register(new(uppercaseTransformer), "upper") // StringTransformer
+	extpoints.RegisterExtension(new(noop), "noop")                  // Noop
+	extpoints.RegisterExtension(new(noop2), "noop2")                // Noop
+	extpoints.RegisterExtension(new(uppercaseTransformer), "upper") // StringTransformer
 	extpoints.NoopFactories.Register(noopFactory, "")
 }
 

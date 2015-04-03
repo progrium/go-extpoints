@@ -2,7 +2,7 @@
 
 This Go generator, named short for "extension points", provides a generic [inversion of control](http://en.wikipedia.org/wiki/Inversion_of_control) model for making extensible Go packages, libraries, and applications.
 
-It generates package extension point singletons from extension types you define. Extension points are then used to both register extensions and use the registered extensions with a common [meta-API](#extension-point-meta-api).
+It generates package extension point singletons from extension types you define. Extension points are then used to both register extensions and use the registered extensions with a common [meta-API](#extension-point-api).
 
 [Logspout](https://github.com/gliderlabs/logspout) is a real application built using go-extpoints. [Read about it here.](http://gliderlabs.com/blog/2015/03/31/new-logspout-extensible-docker-logging/)
 
@@ -76,7 +76,7 @@ for _, modifier := range RequestModifiers.All() {
 
 ```
 
-## Extension Point Meta API
+## Extension Point API
 
 All extension types passed to go-extpoints will be turned into extension point singletons, using the pluralized name of the extension type. These extension point objects implement this simple meta-API:
 
@@ -107,8 +107,11 @@ type <ExtensionPoint> interface {
 It also generates top-level registration functions that will run extensions through all known extension points, registering or unregistering with any that are based on an interface the extension implements. They return the names of the interfaces they were registered/unregistered with.
 
 ```go
-func Register(extension interface{}, name string) []string
-func Unregister(name string) []string
+
+func RegisterExtension(extension interface{}, name string) []string
+
+func UnregisterExtension(name string) []string
+
 ```
 
 ## Example Application
