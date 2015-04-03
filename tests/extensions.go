@@ -7,7 +7,8 @@ import (
 )
 
 func init() {
-	extpoints.Register(new(noop), "")                      // Noop
+	extpoints.Register(new(noop), "noop")                  // Noop
+	extpoints.Register(new(noop2), "noop2")                // Noop
 	extpoints.Register(new(uppercaseTransformer), "upper") // StringTransformer
 	extpoints.NoopFactories.Register(noopFactory, "")
 }
@@ -18,7 +19,14 @@ func noopFactory() extpoints.Noop {
 
 type noop struct{}
 
-func (n *noop) Noop() {
+func (n *noop) Noop() string {
+	return "noop"
+}
+
+type noop2 struct{}
+
+func (n *noop2) Noop() string {
+	return "noop2"
 }
 
 type uppercaseTransformer struct{}

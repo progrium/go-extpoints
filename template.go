@@ -5,88 +5,95 @@ package {{.Package}}
 
 import (
 	"reflect"
-	"sync"
-	"strings"
 	"runtime"
+	"strings"
+	"sync"
 )
 
-var registry = struct {
+var registry = &registryType{m: make(map[string]*extensionPoint)}
+
+type registryType struct {
 	sync.Mutex
-	extpoints map[string]*extensionPoint
-}{
-	extpoints: make(map[string]*extensionPoint),
+	m map[string]*extensionPoint
 }
+
+// Base extension point
 
 type extensionPoint struct {
 	sync.Mutex
 	iface      reflect.Type
-	components map[string]interface{}
+	extensions map[string]interface{}
 }
 
 func newExtensionPoint(iface interface{}) *extensionPoint {
 	ep := &extensionPoint{
 		iface:      reflect.TypeOf(iface).Elem(),
-		components: make(map[string]interface{}),
+		extensions: make(map[string]interface{}),
 	}
 	registry.Lock()
-	defer registry.Unlock()
-	registry.extpoints[ep.iface.Name()] = ep
+	registry.m[ep.iface.Name()] = ep
+	registry.Unlock()
 	return ep
 }
 
-func (ep *extensionPoint) lookup(name string) (ext interface{}, ok bool) {
+func (ep *extensionPoint) lookup(name string) interface{} {
 	ep.Lock()
 	defer ep.Unlock()
-	ext, ok = ep.components[name]
-	return
+	ext, ok := ep.extensions[name]
+	if !ok {
+		return nil
+	}
+	return ext
 }
 
 func (ep *extensionPoint) all() map[string]interface{} {
 	ep.Lock()
 	defer ep.Unlock()
 	all := make(map[string]interface{})
-	for k, v := range ep.components {
+	for k, v := range ep.extensions {
 		all[k] = v
 	}
 	return all
 }
 
-func (ep *extensionPoint) register(component interface{}, name string) bool {
+func (ep *extensionPoint) register(extension interface{}, name string) bool {
 	ep.Lock()
 	defer ep.Unlock()
 	if name == "" {
-		comType := reflect.TypeOf(component)
+		comType := reflect.TypeOf(extension)
 		if comType.Kind() == reflect.Func {
 			nameParts := strings.Split(runtime.FuncForPC(
-				reflect.ValueOf(component).Pointer()).Name(), ".")
+				reflect.ValueOf(extension).Pointer()).Name(), ".")
 			name = nameParts[len(nameParts)-1]
 		} else {
 			name = comType.Elem().Name()
 		}
 	}
-	_, exists := ep.components[name]
+	_, exists := ep.extensions[name]
 	if exists {
 		return false
 	}
-	ep.components[name] = component
+	ep.extensions[name] = extension
 	return true
 }
 
 func (ep *extensionPoint) unregister(name string) bool {
 	ep.Lock()
 	defer ep.Unlock()
-	_, exists := ep.components[name]
+	_, exists := ep.extensions[name]
 	if !exists {
 		return false
 	}
-	delete(ep.components, name)
+	delete(ep.extensions, name)
 	return true
 }
 
-func implements(component interface{}) []string {
+// Top level registration
+
+func extensionTypes(extension interface{}) []string {
 	var ifaces []string
-	typ := reflect.TypeOf(component)
-	for name, ep := range registry.extpoints {
+	typ := reflect.TypeOf(extension)
+	for name, ep := range registry.m {
 		if ep.iface.Kind() == reflect.Func && typ.AssignableTo(ep.iface) {
 			ifaces = append(ifaces, name)
 		}
@@ -97,12 +104,12 @@ func implements(component interface{}) []string {
 	return ifaces
 }
 
-func Register(component interface{}, name string) []string {
+func Register(extension interface{}, name string) []string {
 	registry.Lock()
 	defer registry.Unlock()
 	var ifaces []string
-	for _, iface := range implements(component) {
-		if ok := registry.extpoints[iface].register(component, name); ok {
+	for _, iface := range extensionTypes(extension) {
+		if registry.m[iface].register(extension, name) {
 			ifaces = append(ifaces, iface)
 		}
 	}
@@ -113,8 +120,8 @@ func Unregister(name string) []string {
 	registry.Lock()
 	defer registry.Unlock()
 	var ifaces []string
-	for iface, extpoint := range registry.extpoints {
-		if ok := extpoint.unregister(name); ok {
+	for iface, extpoint := range registry.m {
+		if extpoint.unregister(name) {
 			ifaces = append(ifaces, iface)
 		}
 	}
@@ -135,16 +142,24 @@ func (ep *{{.Type}}) Unregister(name string) bool {
 	return ep.unregister(name)
 }
 
-func (ep *{{.Type}}) Register(component {{.Name}}, name string) bool {
-	return ep.register(component, name)
+func (ep *{{.Type}}) Register(extension {{.Name}}, name string) bool {
+	return ep.register(extension, name)
 }
 
-func (ep *{{.Type}}) Lookup(name string) ({{.Name}}, bool) {
-	ext, ok := ep.lookup(name)
-	if !ok {
-		return nil, ok
+func (ep *{{.Type}}) Lookup(name string) {{.Name}} {
+	ext := ep.lookup(name)
+	if ext == nil {
+		return nil
 	}
-	return ext.({{.Name}}), ok
+	return ext.({{.Name}})
+}
+
+func (ep *{{.Type}}) Select(names []string) []{{.Name}} {
+	var selected []{{.Name}}
+	for _, name := range names {
+		selected = append(selected, ep.Lookup(name))
+	}
+	return selected
 }
 
 func (ep *{{.Type}}) All() map[string]{{.Name}} {

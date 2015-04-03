@@ -43,8 +43,8 @@ With types defined, go-extpoints generates package singletons for each type. Whe
 
 ```go
 // Lookup a single registered extension for drivers
-config, registered := ConfigStores.Lookup(configStore)
-if !registered {
+config := ConfigStores.Lookup(configStore)
+if config == nil {
 	log.Fatalf("config store '%s' not registered", configStore)
 }
 config.Set("foo", "bar")
@@ -82,20 +82,29 @@ All extension types passed to go-extpoints will be turned into extension point s
 
 ```go
 type <ExtensionPoint> interface {
-	// if name is "", the specific extension type is used
+	// if name is "", the specific extension type is used.
+	// returns false if doesn't implement type or already registered.
 	Register(extension <ExtensionType>, name string) bool
 
+	// returns false if not registered to start with
 	Unregister(name string) bool
 
-	Lookup(name string) (<ExtensionType>, bool)
+	// returns nil if not registered
+	Lookup(name string) <ExtensionType>
 
-	All() map[string]<ExtensionType> // keyed by name
+	// for sorted subsets. nil lookups are included
+	Select(names []string) []<ExtensionType>
 
+	// all registered, keyed by name
+	All() map[string]<ExtensionType>
+
+	// convenient list of names
 	Names() []string // list of names
+
 }
 ```
 
-It also generates top-level registration functions that will run components through all known extension points, registering or unregistering with any that are based on an interface the component implements. They return the names of the interfaces they were registered/unregistered with.
+It also generates top-level registration functions that will run extensions through all known extension points, registering or unregistering with any that are based on an interface the extension implements. They return the names of the interfaces they were registered/unregistered with.
 
 ```
 func Register(extension interface{}, name string) []string
@@ -104,7 +113,7 @@ func Unregister(name string) []string
 
 ## Example Application
 
-Here is a full Go application that lets components hook into `main()` as subcommands simply by implementing an interface we'll make called `Subcommand`. This interface will have just one method `Run()`, but you can make extension points based on any interface.
+Here is a full Go application that lets extensions hook into `main()` as subcommands simply by implementing an interface we'll make called `Subcommand`. This interface will have just one method `Run()`, but you can make extension points based on any interface.
 
 Assuming our package lives under `$GOPATH/src/github.com/quick/example`, here is our `main.go`:
 
@@ -160,7 +169,7 @@ We use `go generate` now to produce the extension point code in our `extpoints` 
 	 ...
 	$ go install
 
-Okay, but it doesn't *do* anything! Let's make a builtin command component that implements `Subcommand`. Add a `hello.go` file:
+Okay, but it doesn't *do* anything! Let's make a builtin command extension that implements `Subcommand`. Add a `hello.go` file:
 
 ```go
 package main
@@ -212,7 +221,7 @@ Users can now just edit this file and `go build` or `go install`.
 
 ## Usage Patterns
 
-Here are different example ways to use extension points to interact with components:
+Here are different example ways to use extension points to interact with extensions:
 
 #### Simple Iteration
 ```go

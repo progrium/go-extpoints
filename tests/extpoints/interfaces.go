@@ -1,7 +1,7 @@
 package extpoints
 
 type Noop interface {
-	Noop()
+	Noop() string
 }
 
 type StringTransformer interface {
