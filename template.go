@@ -101,13 +101,13 @@ func (ep *extensionPoint) register(extension interface{}, name string) bool {
 	ep.Lock()
 	defer ep.Unlock()
 	if name == "" {
-		comType := reflect.TypeOf(extension)
-		if comType.Kind() == reflect.Func {
+		typ := reflect.TypeOf(extension)
+		if typ.Kind() == reflect.Func {
 			nameParts := strings.Split(runtime.FuncForPC(
 				reflect.ValueOf(extension).Pointer()).Name(), ".")
 			name = nameParts[len(nameParts)-1]
 		} else {
-			name = comType.Elem().Name()
+			name = typ.Elem().Name()
 		}
 	}
 	_, exists := ep.extensions[name]
