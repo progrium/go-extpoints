@@ -8,7 +8,7 @@ It generates package extension point singletons from extension types you define.
 
 ## Getting the tool
 
-	$ go install github.com/progrium/go-extpoints
+	$ go get github.com/progrium/go-extpoints
 
 ## Concepts
 
