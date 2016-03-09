@@ -151,7 +151,7 @@ func main() {
 
 	files, _ := ioutil.ReadDir(packagePath)
 	for _, file := range files {
-		if file.Name() != "extpoints.go" && !strings.HasSuffix(file.Name(), "_ext.go") {
+		if file.Name() != "extpoints.go" && !strings.HasSuffix(file.Name(), "_ext.go") && strings.HasSuffix(file.Name(), ".go") {
 			path := filepath.Join(packagePath, file.Name())
 			log.Printf("Processing file %s", path)
 			packageName, ifaces = processFile(path)
